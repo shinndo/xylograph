@@ -1,5 +1,5 @@
 {
-  "name": "image-proxy",
+  "name": "xylograph",
   "version": "0.1.0",
   "description": "",
   "main": "dist/index.js",
@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/shinndo/image-proxy.git"
+    "url": "git+https://github.com/shinndo/xylograph.git"
   },
   "author": "shinndo",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/shinndo/image-proxy/issues"
+    "url": "https://github.com/shinndo/xylograph/issues"
   },
-  "homepage": "https://github.com/shinndo/image-proxy#readme",
+  "homepage": "https://github.com/shinndo/xylograph#readme",
   "dependencies": {
     "app-root-path": "^3.0.0",
     "canvas": "^2.6.1"
