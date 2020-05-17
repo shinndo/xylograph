@@ -1,0 +1,27 @@
+{
+  "name": "image-proxy",
+  "version": "0.1.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "npx jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shinndo/image-proxy.git"
+  },
+  "author": "shinndo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shinndo/image-proxy/issues"
+  },
+  "homepage": "https://github.com/shinndo/image-proxy#readme",
+  "dependencies": {
+    "app-root-path": "^3.0.0",
+    "canvas": "^2.6.1"
+  },
+  "devDependencies": {
+    "@types/app-root-path": "^1.2.4",
+    "@types/node": "^14.0.1"
+  }
+}
