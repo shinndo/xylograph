@@ -4,6 +4,8 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc -p .",
+    "example": "tsc -p examples/tsconfig.json && node examples/output/index.js",
     "test": "npx jest"
   },
   "repository": {

@@ -4,5 +4,6 @@
 # Distribution
 /dist
 
-# Output
-output.*
+# Examples
+/examples/output
+/examples/output.*
