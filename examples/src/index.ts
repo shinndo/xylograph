@@ -2,31 +2,40 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as appRoot from 'app-root-path';
 import * as Canvas from 'canvas';
+import {Xylograph} from '../../src/index';
 
-async function examples() {
-    const canvasWidth: number = 640;
-    const canvasHeight: number = 480;
-    const margin: number = 20;
 
-    const canvas: Canvas.Canvas = Canvas.createCanvas(canvasWidth, canvasHeight);
-    const ctx: Canvas.CanvasRenderingContext2D = canvas.getContext('2d');
+// Create Xylograph
+const xg = new Xylograph({
+    // canvasLibrary: Canvas,
+    createCanvasFunction: Canvas.createCanvas,
+});
 
-    const outputFile: fs.WriteStream = fs.createWriteStream(appRoot.toString() + '/examples/output.jpg');
+// EventListner
+xg.on('addCanvas', (canvas, ctx) => {
+    console.log("Add canvas");
+});
+// xg.on('change', (canvas, ctx) => {
+//     if(!canvas.isChanged()) return;
+// });
+// xg.canvas.on('change', (canvas, ctx) => {});
+// xg.canvas.context.on('change', (canvas, ctx) => {});
 
-    const srcImg = await Canvas.loadImage(appRoot.toString() + '/examples/sample.png');
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    ctx.drawImage(srcImg, margin, margin, canvasWidth - (margin * 2), canvasHeight - (margin * 2));
-    ctx.font = 'normal 12px sans-serif';
-    ctx.fillStyle = '#000000';
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'middle';
-    ctx.fillText("@shinndo", canvasWidth - margin, canvasHeight - (margin / 2) -1);
+// // New Layer
+xg.addCanvas();
+// xg.addImage(stream, w, h, x, y, dx, dw,);
 
-    const outputStream: Canvas.JPEGStream = canvas.createJPEGStream({
-        quality: 1
-    });
-    outputStream.pipe(outputFile);
-}
+// xg.getCanvas(0);
+// xg.getCanvas('background');
+// xg.getContext(0);
+// xg.getContext('background');
 
-examples();
+// xg.ctx[0].fillRect(); // call 'change' event.
+// xg.getContext(0).fillRect();
+// // Run script to context
+// xg.ctx[0].run((ctx) => {
+
+// });
+// xg.canvas[0].run((canvas, ctx) => {
+
+// });
