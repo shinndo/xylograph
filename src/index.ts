@@ -19,7 +19,7 @@ export interface Canvas {
 export interface Context {}
 
 export type xgOption = {
-    createCanvasFunction?: CreateCanvasFunction;
+    createCanvasFunction: CreateCanvasFunction;
     canvasWidth?: number;
     canvasHeight?: number;
 };
@@ -28,29 +28,25 @@ export class Xylograph {
     private createCanvas: CreateCanvasFunction;
     private canvasWidth: number;
     private canvasHeight: number;
-    private layers: Canvas[];
+    private layers: {[key: string]: Canvas};
+    private unnamedLayerIndex: number;
     private events: StrictEventEmitter<EventEmitter, Events>;
 
-    constructor(opt?: xgOption) {
-        opt = opt || {};
-
+    constructor(opt: xgOption) {
         // Set canvas size
         this.canvasWidth = (opt.canvasWidth)? opt.canvasWidth : 200;
         this.canvasHeight = (opt.canvasHeight)? opt.canvasHeight : 200;
 
         // Set createCanvas function
-        if(isBrowser()) {
-            this.createCanvas =  this.createCanvasForBrowser;
-        } else {
-            if(opt.createCanvasFunction) {
-                this.createCanvas = opt.createCanvasFunction;
-            } else {
-                throw Error("createCanvas function is undefined.")
-            }
+        if(!opt.createCanvasFunction) {
+            throw new Error("createCanvas function is undefined.");
         }
+        this.createCanvas = opt.createCanvasFunction;
+        
         
         // Init layers
-        this.layers = [];
+        this.layers = {};
+        this.unnamedLayerIndex = 0;
 
         // Init event
         this.events = new EventEmitter();
@@ -61,14 +57,24 @@ export class Xylograph {
         if(event === "addCanvas") this.events.on("addCanvas", listener);
         return this;
     }
-
-    addCanvas(): this {
-        this.layers.push(this.createCanvas(this.canvasWidth, this.canvasHeight));
-        this.events.emit("addCanvas", {}, {});
-        return this; 
+    
+    addCanvas(canvasName?: string): Canvas {
+        if(typeof canvasName != "string") {
+            while(this.layers[this.unnamedLayerIndex]) this.unnamedLayerIndex++;
+            canvasName = this.unnamedLayerIndex.toString();
+            this.unnamedLayerIndex++;
+        }
+        const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight);
+        this.layers[canvasName] = newCanvas;
+        // this.events.emit("addCanvas", {}, {});
+        return newCanvas; 
     }
 
-    private createCanvasForBrowser(width: number, height: number): Canvas {
+    getCanvas(canvasName: string): Canvas {
+        return this.layers[canvasName];
+    }
+
+    static createCanvasForBrowser(width: number, height: number): Canvas {
         const canvas: HTMLCanvasElement = window.document.createElement("canvas");
         canvas.setAttribute("width", width.toString());
         canvas.setAttribute("height", height.toString());
