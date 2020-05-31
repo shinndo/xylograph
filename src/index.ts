@@ -1,11 +1,16 @@
 import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
 
-type CanvasEventListener = (canvas: Canvas) => void;
-export type CreateCanvasFunction = (width: number, height: number) => Canvas;
+type BrowserCanvas = HTMLCanvasElement;
+
+export type AddCanvasEventListener = (canvas: Canvas) => void;
+export type RemoveCanvasEventListener = (canvasName: string) => void;
+
+export type CreateCanvasFunction = (width: number, height: number) => BrowserCanvas | ServerSideCanvas;
 
 interface Events {
-    addCanvas: CanvasEventListener;
+    addCanvas: AddCanvasEventListener;
+    removeCanvas: RemoveCanvasEventListener;
 }
 
 export interface canvasParameter {
@@ -13,9 +18,13 @@ export interface canvasParameter {
     hidden: boolean;
 }
 
+export interface ServerSideCanvas {
+    getContext: (context: string) => Context;
+}
+
 export interface Canvas {
     getContext: (context: string) => Context;
-    xylograph?: canvasParameter;
+    xylograph: canvasParameter;
 }
 
 export interface Context {}
@@ -50,7 +59,7 @@ export class Xylograph extends EventEmitter implements StrictEventEmitter<EventE
     }
 
     addCanvas(canvasName: string): Canvas {
-        const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight);
+        const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas;
         newCanvas.xylograph = this.createXylographPropertyForCanvas(canvasName);
         
         this.layers[canvasName] = newCanvas;
@@ -62,6 +71,11 @@ export class Xylograph extends EventEmitter implements StrictEventEmitter<EventE
         return this.layers[canvasName];
     }
 
+    removeCanvas(canvasName: string): void {
+        delete this.layers[canvasName];
+        this.emit("removeCanvas", canvasName);
+    }
+
     private createXylographPropertyForCanvas(canvasName: string, hidden = false): canvasParameter {
         return {
             name: canvasName,
@@ -69,10 +83,10 @@ export class Xylograph extends EventEmitter implements StrictEventEmitter<EventE
         }
     }
 
-    static createCanvasForBrowser(width: number, height: number): Canvas {
-        const canvas: HTMLCanvasElement = window.document.createElement("canvas");
+    static createCanvasForBrowser(width: number, height: number): BrowserCanvas {
+        const canvas: BrowserCanvas = window.document.createElement("canvas");
         canvas.setAttribute("width", width.toString());
         canvas.setAttribute("height", height.toString());
-        return canvas as Canvas;
+        return canvas;
     }
 }
