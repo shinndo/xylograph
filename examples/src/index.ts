@@ -2,13 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as appRoot from 'app-root-path';
 import * as Canvas from 'canvas';
-import {Xylograph} from '../../src/index';
+import { Xylograph, CreateCanvasFunction } from '../../src/index';
 
 
 // Create Xylograph
 const xg = new Xylograph({
-    // canvasLibrary: Canvas,
-    createCanvasFunction: Canvas.createCanvas,
+    createCanvasFunction: Canvas.createCanvas as CreateCanvasFunction,
 });
 
 // EventListner
@@ -22,7 +21,7 @@ xg.on('addCanvas', (canvas, ctx) => {
 // xg.canvas.context.on('change', (canvas, ctx) => {});
 
 // // New Layer
-xg.addCanvas();
+xg.addCanvas("background");
 // xg.addImage(stream, w, h, x, y, dx, dw,);
 
 // xg.getCanvas(0);
@@ -39,3 +38,4 @@ xg.addCanvas();
 // xg.canvas[0].run((canvas, ctx) => {
 
 // });
+ 

@@ -1,16 +1,15 @@
-import { Xylograph, Canvas, Context } from "../src/index";
+import { Xylograph, Canvas, Context, CreateCanvasFunction } from "../src/index";
 import { createCanvas } from "canvas";
-import { create } from "domain";
 
 interface MockCanvas {
     tag?: string;
 }
 
 const createCanvasFunctionMock = (tag?: string) => {
-    return (w: number, h:number): MockCanvas => {
+    return (w: number, h:number): Canvas => {
         const mockCanvas: MockCanvas = {};
         if(typeof tag == "string") mockCanvas.tag = tag; 
-        return mockCanvas;
+        return mockCanvas as Canvas;
     }
 };
 
@@ -20,20 +19,10 @@ describe("Xylograph class", () => {
         expect.assertions(1);
         const notThrowInstantiate = () => {
             const xg: Xylograph = new Xylograph({
-                createCanvasFunction: createCanvas
+                createCanvasFunction: createCanvas as CreateCanvasFunction
             });
         }
         expect(notThrowInstantiate).not.toThrow();
-    });
-
-    test("addCanvas()", () => {
-        expect.assertions(1);
-        const tag: string = "addCanvasTest";
-        const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvasFunctionMock(tag)
-        });
-        const canvas: MockCanvas = xg.addCanvas() as MockCanvas;
-        expect(canvas.tag).toBe(tag);
     });
 
     test("addCanvas(name)", () => {
@@ -44,15 +33,6 @@ describe("Xylograph class", () => {
         });
         const canvas: MockCanvas = xg.addCanvas(tag) as MockCanvas;
         expect(canvas.tag).toBe(tag);
-    });
-
-    test("getCanvas()", () => {
-        expect.assertions(1);        
-        const tag: string = "getCanvasTest";
-        const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvasFunctionMock(tag)
-        });
-        expect(xg.addCanvas()).toEqual(xg.getCanvas("0"));
     });
 
     test("getCanvas(name)", () => {
@@ -70,13 +50,16 @@ describe("Xylograph class", () => {
 describe("Event", () => {
     test("addCanvas", () => {
         expect.assertions(1);
+        const tag: string = "addCanvasEvent";
         const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvas
+            createCanvasFunction: createCanvas as CreateCanvasFunction
         });
-        xg.on("addCanvas", (canvas: Canvas, cxt: Context) => {
-            expect("ok").toBe("ok");
+        xg.on("addCanvas", (canvas: Canvas) => {
+            if(canvas.xylograph) {
+                expect(canvas.xylograph.name).toBe(tag);
+            }
         });
-        xg.addCanvas();
+        xg.addCanvas(tag);
     });
 });
 
@@ -84,7 +67,7 @@ describe("Canvas API Compatibility", () => {
     test("Canvas.getContext('2d')", () => {
         expect.assertions(1);
         const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvas
+            createCanvasFunction: createCanvas as CreateCanvasFunction
         });
         expect(true).toBe(false);
     });
