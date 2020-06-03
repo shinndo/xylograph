@@ -54,6 +54,31 @@ describe("Xylograph class", () => {
         xg.removeCanvas(name);
         expect(xg.getCanvas(name)).toBeUndefined();
     });
+
+    test("moveCanvas(canvas[])", () => {
+        expect.assertions(1);
+        const name: string = "moveCanvas";
+        const xg: Xylograph = new Xylograph({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+        const topCanvas: Canvas = xg.addCanvas("top");
+        const middleCanvas: Canvas = xg.addCanvas(name);
+        const bottomCanvas: Canvas = xg.addCanvas("bottom");
+        const canvases: Canvas[] = [bottomCanvas, middleCanvas, topCanvas];
+        xg.moveCanvas(canvases);
+
+        const movedCanvases: Canvas[] = xg.getCanvases();
+        expect(movedCanvases).toEqual(canvases);
+    });
+
+    test("getCanvases()", () => {
+        expect.assertions(1);
+        const xg: Xylograph = new Xylograph({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+        const addCanvases: Canvas[] = [xg.addCanvas("1st"), xg.addCanvas("2nd"), xg.addCanvas("3rd")];
+        expect(xg.getCanvases()).toEqual(addCanvases);
+    });
 });
 
 describe("Event", () => {

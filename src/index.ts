@@ -30,6 +30,9 @@ export interface Canvas {
 
 export interface Context {}
 
+type LayerArray = Canvas[];
+type LayerNumberObject = {[key: string]: number}; 
+
 export type xylographOption = {
     createCanvasFunction: CreateCanvasFunction;
     canvasWidth?: number;
@@ -40,8 +43,8 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
     private createCanvas: CreateCanvasFunction;
     private canvasWidth: number;
     private canvasHeight: number;
-    private layers: Canvas[];
-    private layerNumber: {[key: string]: number};
+    private layers: LayerArray;
+    private layerNumber: LayerNumberObject;
 
     constructor(opt: xylographOption) {
         super();
@@ -58,7 +61,7 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         
         // Init layers
         this.layers = [];
-        this.layerNumber = {};
+        this.layerNumber = Object.create(null);
     }
 
     addCanvas(canvasName: string): Canvas {
@@ -79,6 +82,26 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         this.layers.splice(this.layerNumber[canvasName], 1);
         delete this.layerNumber[canvasName];
         this.emit("removeCanvas", canvasName);
+    }
+
+    moveCanvas(canvases: Canvas[]): void {
+        const newLayers: LayerArray = [];
+        const newLayerNumber: LayerNumberObject = Object.create(null);
+        for(let i = 0; i < canvases.length; i++) {
+            const canvas: Canvas = canvases[i];
+            newLayers.push(canvas);
+            newLayerNumber[this.getCanvasName(canvas)] = newLayers.length - 1;
+        }
+        this.layers = newLayers;
+        this.layerNumber = newLayerNumber;
+    }
+
+    getCanvases(): Canvas[] {
+        return this.layers;
+    }
+
+    private getCanvasName(canvas: Canvas): string {
+        return canvas.xylograph.name;
     }
 
     private createXylographPropertyForCanvas(canvasName: string, hidden = false): canvasParameter {
