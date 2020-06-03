@@ -12,6 +12,7 @@ interface Events {
     addCanvas: AddCanvasEventListener;
     removeCanvas: RemoveCanvasEventListener;
 }
+type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
 
 export interface canvasParameter {
     name: string;
@@ -35,7 +36,7 @@ export type xylographOption = {
     canvasHeight?: number;
 };
 
-export class Xylograph extends EventEmitter implements StrictEventEmitter<EventEmitter, Events> {
+export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) {
     private createCanvas: CreateCanvasFunction;
     private canvasWidth: number;
     private canvasHeight: number;
