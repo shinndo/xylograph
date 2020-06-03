@@ -5,12 +5,14 @@ type BrowserCanvas = HTMLCanvasElement;
 
 export type AddCanvasEventListener = (canvas: Canvas) => void;
 export type RemoveCanvasEventListener = (canvasName: string) => void;
+export type MoveCanvasEventListener = (canvases: Canvas[]) => void;
 
 export type CreateCanvasFunction = (width: number, height: number) => BrowserCanvas | ServerSideCanvas;
 
 interface Events {
     addCanvas: AddCanvasEventListener;
     removeCanvas: RemoveCanvasEventListener;
+    moveCanvas: MoveCanvasEventListener;
 }
 type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
 
@@ -94,6 +96,7 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         }
         this.layers = newLayers;
         this.layerNumber = newLayerNumber;
+        this.emit("moveCanvas", newLayers);
     }
 
     getCanvases(): Canvas[] {

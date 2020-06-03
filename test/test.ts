@@ -19,7 +19,7 @@ describe("Xylograph class", () => {
         expect.assertions(1);
         const notThrowInstantiate = () => {
             const xg: Xylograph = new Xylograph({
-                createCanvasFunction: createCanvas as CreateCanvasFunction
+                createCanvasFunction: createCanvasFunctionMock()
             });
         }
         expect(notThrowInstantiate).not.toThrow();
@@ -86,10 +86,10 @@ describe("Event", () => {
         expect.assertions(1);
         const tag: string = "addCanvasEvent";
         const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvas as CreateCanvasFunction
+            createCanvasFunction: createCanvasFunctionMock(tag)
         });
         xg.on("addCanvas", (canvas: Canvas) => {
-            expect(canvas.xylograph.name).toBe(tag);
+            expect((canvas as MockCanvas).tag).toBe(tag);
         });
         xg.addCanvas(tag);
     });
@@ -98,13 +98,28 @@ describe("Event", () => {
         expect.assertions(1);
         const name: string = "removeCanvasEvent";
         const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvas as CreateCanvasFunction
+            createCanvasFunction: createCanvasFunctionMock()
         });
         xg.on("removeCanvas", (canvasName: string) => {
             expect(canvasName).toBe(name);
         });
         xg.addCanvas(name);
         xg.removeCanvas(name);
+    });
+
+    test("moveCanvas", () => {
+        expect.assertions(1);
+        const moveCanvases: Canvas[] = Array(3);
+        const xg: Xylograph = new Xylograph({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+        xg.on("moveCanvas", (canvases: Canvas[]) => {
+            expect(canvases).toEqual(moveCanvases);
+        });
+        moveCanvases[2] = xg.addCanvas("1st");
+        moveCanvases[0] = xg.addCanvas("2nd");
+        moveCanvases[1] = xg.addCanvas("3rd")
+        xg.moveCanvas(moveCanvases);
     });
 });
 
