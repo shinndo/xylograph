@@ -40,7 +40,8 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
     private createCanvas: CreateCanvasFunction;
     private canvasWidth: number;
     private canvasHeight: number;
-    private layers: {[key: string]: Canvas};
+    private layers: Canvas[];
+    private layerNumber: {[key: string]: number};
 
     constructor(opt: xylographOption) {
         super();
@@ -56,24 +57,27 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         this.createCanvas = opt.createCanvasFunction;
         
         // Init layers
-        this.layers = {};
+        this.layers = [];
+        this.layerNumber = {};
     }
 
     addCanvas(canvasName: string): Canvas {
         const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas;
         newCanvas.xylograph = this.createXylographPropertyForCanvas(canvasName);
         
-        this.layers[canvasName] = newCanvas;
+        this.layers.push(newCanvas);
+        this.layerNumber[canvasName] = this.layers.length - 1;
         this.emit("addCanvas", newCanvas);
         return newCanvas; 
     }
 
     getCanvas(canvasName: string): Canvas {
-        return this.layers[canvasName];
+        return this.layers[this.layerNumber[canvasName]];
     }
 
     removeCanvas(canvasName: string): void {
-        delete this.layers[canvasName];
+        this.layers.splice(this.layerNumber[canvasName], 1);
+        delete this.layerNumber[canvasName];
         this.emit("removeCanvas", canvasName);
     }
 
