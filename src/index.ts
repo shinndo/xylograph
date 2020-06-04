@@ -67,6 +67,13 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
     }
 
     addCanvas(canvasName: string): Canvas {
+        if(typeof canvasName !== "string") {
+            canvasName = "unnamed";
+        }
+
+        // canvasName duplicate check
+        while(typeof this.layerNumber[canvasName] !== "undefined") canvasName = this.canvasNameIncrement(canvasName);
+
         const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas;
         newCanvas.xylograph = this.createXylographPropertyForCanvas(canvasName);
         
@@ -81,12 +88,25 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
     }
 
     removeCanvas(canvasName: string): void {
+        if(typeof canvasName !== "string") return;
+        if(typeof this.layerNumber[canvasName] === "undefined") return;
+
+        // Remove canvas
         this.layers.splice(this.layerNumber[canvasName], 1);
         delete this.layerNumber[canvasName];
+
+        // Update layerNumber
+        for(let i = 0; i < this.layers.length; i++) {
+            this.layerNumber[this.layers[i].xylograph.name] = i;
+        }
+        
         this.emit("removeCanvas", canvasName);
     }
 
     moveCanvas(canvases: Canvas[]): void {
+        if(!Array.isArray(canvases)) return;
+
+        // Create new layers and layerNumber
         const newLayers: LayerArray = [];
         const newLayerNumber: LayerNumberObject = Object.create(null);
         for(let i = 0; i < canvases.length; i++) {
@@ -94,8 +114,10 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
             newLayers.push(canvas);
             newLayerNumber[this.getCanvasName(canvas)] = newLayers.length - 1;
         }
+
         this.layers = newLayers;
         this.layerNumber = newLayerNumber;
+
         this.emit("moveCanvas", newLayers);
     }
 
@@ -105,6 +127,13 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
 
     private getCanvasName(canvas: Canvas): string {
         return canvas.xylograph.name;
+    }
+
+    private canvasNameIncrement(canvasName: string): string {
+        const incrementMark: RegExpMatchArray | null = canvasName.match(/\[[0-9]+\]$/);
+        if(!incrementMark) return canvasName + "[1]";
+        const num = parseInt(incrementMark.toString().slice(1, -1));
+        return canvasName.replace(/\[[0-9]+\]$/, "[" + (num + 1) + "]");
     }
 
     private createXylographPropertyForCanvas(canvasName: string, hidden = false): canvasParameter {
