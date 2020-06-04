@@ -122,24 +122,3 @@ describe("Event", () => {
         xg.moveCanvas(moveCanvases);
     });
 });
-
-describe("Canvas API Compatibility", () => {
-    test("Canvas.getContext('2d')", () => {
-        expect.assertions(1);
-        const xg: Xylograph = new Xylograph({
-            createCanvasFunction: createCanvas as CreateCanvasFunction
-        });
-        expect(true).toBe(false);
-    });
-
-    test("Context.FillStyle =", () => {
-        expect.assertions(1);
-        expect(true).toBe(false);
-    });
-
-    test("Context.FillRect()", () => {
-        expect.assertions(1);
-        expect(true).toBe(false);
-    });
-});
-

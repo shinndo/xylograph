@@ -11,7 +11,7 @@ const xg = new Xylograph({
 });
 
 // EventListner
-xg.on('addCanvas', (canvas, ctx) => {
+xg.on('addCanvas', (canvas) => {
     console.log("Add canvas");
 });
 // xg.on('change', (canvas, ctx) => {
