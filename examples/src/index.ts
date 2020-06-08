@@ -6,8 +6,8 @@ import { Xylograph, CreateCanvasFunction } from '../../src/index';
 
 
 // Create Xylograph
-const xg = new Xylograph({
-    createCanvasFunction: Canvas.createCanvas as CreateCanvasFunction,
+const xg = new Xylograph<Canvas.Canvas>({
+    createCanvasFunction: Canvas.createCanvas,
 });
 
 // EventListner
@@ -23,6 +23,7 @@ xg.on('addCanvas', (canvas) => {
 // // New Layer
 xg.addCanvas("background");
 // xg.addImage(stream, w, h, x, y, dx, dw,);
+
 
 // xg.getCanvas(0);
 // xg.getCanvas('background');

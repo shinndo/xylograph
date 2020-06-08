@@ -1,13 +1,17 @@
 import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
 
-type BrowserCanvas = HTMLCanvasElement;
+export type AddCanvasEventListener = {
+    <T>(canvas: Canvas<T>): void
+};
 
-export type AddCanvasEventListener = (canvas: Canvas) => void;
-export type RemoveCanvasEventListener = (canvasName: string) => void;
-export type MoveCanvasEventListener = (canvases: Canvas[]) => void;
+export type RemoveCanvasEventListener =  {
+    (canvasName: string): void;
+};
 
-export type CreateCanvasFunction = (width: number, height: number) => BrowserCanvas | ServerSideCanvas;
+export type MoveCanvasEventListener = {
+    <T>(canvases: Canvas<T>[]): void;
+};
 
 interface Events {
     addCanvas: AddCanvasEventListener;
@@ -16,39 +20,36 @@ interface Events {
 }
 type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
 
-export interface canvasParameter {
+export interface CanvasParameter {
     name: string;
     hidden: boolean;
 }
 
-export interface ServerSideCanvas {
-    getContext: (context: string) => Context;
-}
+interface XylographCanvas {
+    xylograph: CanvasParameter;
+};
 
-export interface Canvas {
-    getContext: (context: string) => Context;
-    xylograph: canvasParameter;
-}
+export type Canvas<T> = T & XylographCanvas;
 
-export interface Context {}
-
-type LayerArray = Canvas[];
+type LayerArray<T> = Canvas<T>[];
 type LayerNumberObject = {[key: string]: number}; 
 
-export type xylographOption = {
-    createCanvasFunction: CreateCanvasFunction;
+export type CreateCanvasFunction<T> = (width: number, height: number) => T;
+
+export type xylographOption<T> = {
+    createCanvasFunction: CreateCanvasFunction<T>;
     canvasWidth?: number;
     canvasHeight?: number;
 };
 
-export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) {
-    private createCanvas: CreateCanvasFunction;
+export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent}) {
+    private createCanvas: CreateCanvasFunction<T>;
     private canvasWidth: number;
     private canvasHeight: number;
-    private layers: LayerArray;
+    private layers: LayerArray<T>;
     private layerNumber: LayerNumberObject;
 
-    constructor(opt: xylographOption) {
+    constructor(opt: xylographOption<T>) {
         super();
 
         // Set canvas size
@@ -66,7 +67,7 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         this.layerNumber = Object.create(null);
     }
 
-    addCanvas(canvasName: string): Canvas {
+    addCanvas(canvasName: string): Canvas<T> {
         if(typeof canvasName !== "string") {
             canvasName = "unnamed";
         }
@@ -74,7 +75,7 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         // canvasName duplicate check
         while(typeof this.layerNumber[canvasName] !== "undefined") canvasName = this.canvasNameIncrement(canvasName);
 
-        const newCanvas: Canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas;
+        const newCanvas: Canvas<T> = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
         newCanvas.xylograph = this.createXylographPropertyForCanvas(canvasName);
         
         this.layers.push(newCanvas);
@@ -83,7 +84,7 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         return newCanvas; 
     }
 
-    getCanvas(canvasName: string): Canvas {
+    getCanvas(canvasName: string): Canvas<T> {
         return this.layers[this.layerNumber[canvasName]];
     }
 
@@ -103,14 +104,14 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         this.emit("removeCanvas", canvasName);
     }
 
-    moveCanvas(canvases: Canvas[]): void {
+    moveCanvas(canvases: LayerArray<T>): void {
         if(!Array.isArray(canvases)) return;
 
         // Create new layers and layerNumber
-        const newLayers: LayerArray = [];
+        const newLayers: LayerArray<T> = [];
         const newLayerNumber: LayerNumberObject = Object.create(null);
         for(let i = 0; i < canvases.length; i++) {
-            const canvas: Canvas = canvases[i];
+            const canvas: Canvas<T> = canvases[i];
             newLayers.push(canvas);
             newLayerNumber[this.getCanvasName(canvas)] = newLayers.length - 1;
         }
@@ -121,11 +122,11 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         this.emit("moveCanvas", newLayers);
     }
 
-    getCanvases(): Canvas[] {
+    getCanvases(): LayerArray<T> {
         return this.layers;
     }
 
-    private getCanvasName(canvas: Canvas): string {
+    private getCanvasName(canvas: Canvas<T>): string {
         return canvas.xylograph.name;
     }
 
@@ -136,15 +137,15 @@ export class Xylograph extends (EventEmitter as {new(): XylographEmitterEvent}) 
         return canvasName.replace(/\[[0-9]+\]$/, "[" + (num + 1) + "]");
     }
 
-    private createXylographPropertyForCanvas(canvasName: string, hidden = false): canvasParameter {
+    private createXylographPropertyForCanvas(canvasName: string, hidden = false): CanvasParameter {
         return {
             name: canvasName,
             hidden: hidden
         }
     }
 
-    static createCanvasForBrowser(width: number, height: number): BrowserCanvas {
-        const canvas: BrowserCanvas = window.document.createElement("canvas");
+    static createCanvasForBrowser(width: number, height: number): HTMLCanvasElement {
+        const canvas: HTMLCanvasElement = window.document.createElement("canvas");
         canvas.setAttribute("width", width.toString());
         canvas.setAttribute("height", height.toString());
         return canvas;
