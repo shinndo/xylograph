@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
 
 export type AddCanvasEventListener = {
-    <T>(canvas: Canvas<T>): void
+    <T>(canvas: Canvas<T>, canvasName: string): void
 };
 
 export type RemoveCanvasEventListener =  {
@@ -13,10 +13,15 @@ export type MoveCanvasEventListener = {
     <T>(canvases: Canvas<T>[]): void;
 };
 
+export type RenameCanvasEventListener = {
+    <T>(canvas: Canvas<T>, newCanvasName: string, oldCanvasName: string): void;
+};
+
 interface Events {
     addCanvas: AddCanvasEventListener;
     removeCanvas: RemoveCanvasEventListener;
     moveCanvas: MoveCanvasEventListener;
+    renameCanvas: RenameCanvasEventListener;
 }
 type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
 
@@ -80,7 +85,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         
         this.layers.push(newCanvas);
         this.layerNumber[canvasName] = this.layers.length - 1;
-        this.emit("addCanvas", newCanvas);
+        this.emit("addCanvas", newCanvas, canvasName);
         return newCanvas; 
     }
 
@@ -120,6 +125,19 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.layerNumber = newLayerNumber;
 
         this.emit("moveCanvas", newLayers);
+    }
+
+    renameCanvas(oldCanvasName: string, newCanvasName: string): void {
+        if(typeof oldCanvasName !== "string") return;
+        if(typeof this.layerNumber[oldCanvasName] === "undefined") return;
+
+        // newCanvasName duplicate check
+        while(typeof this.layerNumber[newCanvasName] !== "undefined") newCanvasName = this.canvasNameIncrement(newCanvasName);
+
+        this.layerNumber[newCanvasName] = this.layerNumber[oldCanvasName];
+        delete this.layerNumber[oldCanvasName];
+
+        this.emit("renameCanvas", this.layers[this.layerNumber[newCanvasName]], newCanvasName, oldCanvasName);
     }
 
     getCanvases(): LayerArray<T> {

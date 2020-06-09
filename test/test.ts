@@ -101,17 +101,43 @@ describe("Xylograph", () => {
         const addCanvases = [xg.addCanvas("1st"), xg.addCanvas("2nd"), xg.addCanvas("3rd")];
         expect(xg.getCanvases()).toEqual(addCanvases);
     });
+
+    test("renameCanvas(oldCanvasName, newCanvasName)", () => {
+        expect.assertions(2);
+        const xg = new Xylograph<MockCanvas>({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+
+        const oldCanvasName = "old";
+        const newCanvasName = "new";
+        const oldCanvas = xg.addCanvas(oldCanvasName);
+        xg.renameCanvas(oldCanvasName, newCanvasName);
+        expect(oldCanvas).toEqual(xg.getCanvas(newCanvasName));
+
+        const bgCanvasName = "bg";
+        const subCanvasName = "sub";
+        const mainCanvasName = "main";
+        xg.addCanvas(bgCanvasName);
+        const subCanvas = xg.addCanvas(subCanvasName);
+        xg.addCanvas(mainCanvasName);
+        xg.renameCanvas(subCanvasName, mainCanvasName);
+        expect(subCanvas).toEqual(xg.getCanvas(mainCanvasName + "[1]"))
+
+    });
+
+    test.todo("duplicateCanvas(targetName, newCanvasName?)");
 });
 
 describe("Event", () => {
     test("addCanvas", () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const tag = "addCanvasEvent";
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock(tag)
         });
-        xg.on("addCanvas", (canvas: Canvas<MockCanvas>) => {
-            expect((canvas as MockCanvas).tag).toBe(tag);
+        xg.on("addCanvas", (canvas: Canvas<MockCanvas>, canvasName: string) => {
+            expect(canvas.tag).toBe(tag);
+            expect(canvasName).toBe(tag);
         });
         xg.addCanvas(tag);
     });
@@ -142,5 +168,22 @@ describe("Event", () => {
         moveCanvases[0] = xg.addCanvas("2nd");
         moveCanvases[1] = xg.addCanvas("3rd")
         xg.moveCanvas(moveCanvases);
+    });
+
+    test("renameCanvas", () => {
+        expect.assertions(3);
+        const tag = "renameCanvasEvent";
+        const oldName = "oldName";
+        const newName = "newName";
+        const xg = new Xylograph<MockCanvas>({
+            createCanvasFunction: createCanvasFunctionMock(tag)
+        });
+        xg.on("renameCanvas", (canvas: Canvas<MockCanvas>, newCanvasName: string, oldCanvasName: string) => {
+            expect(canvas.tag).toBe(tag);
+            expect(newCanvasName).toBe(newName);
+            expect(oldCanvasName).toBe(oldName);
+        });
+        xg.addCanvas(oldName);
+        xg.renameCanvas(oldName, newName);
     });
 });
