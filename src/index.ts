@@ -162,7 +162,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         }
     }
 
-    static createCanvasForBrowser(width: number, height: number): HTMLCanvasElement {
+    static createHTMLCanvas(width: number, height: number): HTMLCanvasElement {
         const canvas: HTMLCanvasElement = window.document.createElement("canvas");
         canvas.setAttribute("width", width.toString());
         canvas.setAttribute("height", height.toString());

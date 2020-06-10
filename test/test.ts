@@ -190,6 +190,6 @@ describe("Event", () => {
 });
 
 describe("Static", () => {
-    test.todo("createCanvasForBrowser()");
+    test.todo("createHTMLCanvas()");
     test.todo("createCanvasFromImage()");
 });
