@@ -126,6 +126,7 @@ describe("Xylograph", () => {
     });
 
     test.todo("duplicateCanvas(targetName, newCanvasName?)");
+    test.todo("resize()");
 });
 
 describe("Event", () => {
@@ -186,4 +187,9 @@ describe("Event", () => {
         xg.addCanvas(oldName);
         xg.renameCanvas(oldName, newName);
     });
+});
+
+describe("Static", () => {
+    test.todo("createCanvasForBrowser()");
+    test.todo("createCanvasFromImage()");
 });
