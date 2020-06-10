@@ -72,7 +72,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.layerNumber = Object.create(null);
     }
 
-    addCanvas(canvasName: string): Canvas<T> {
+    public addCanvas(canvasName: string): Canvas<T> {
         if(typeof canvasName !== "string") {
             canvasName = "unnamed";
         }
@@ -89,11 +89,11 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         return newCanvas; 
     }
 
-    getCanvas(canvasName: string): Canvas<T> {
+    public getCanvas(canvasName: string): Canvas<T> {
         return this.layers[this.layerNumber[canvasName]];
     }
 
-    removeCanvas(canvasName: string): void {
+    public removeCanvas(canvasName: string): void {
         if(typeof canvasName !== "string") return;
         if(typeof this.layerNumber[canvasName] === "undefined") return;
 
@@ -109,7 +109,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.emit("removeCanvas", canvasName);
     }
 
-    moveCanvas(canvases: LayerArray<T>): void {
+    public moveCanvas(canvases: LayerArray<T>): void {
         if(!Array.isArray(canvases)) return;
 
         // Create new layers and layerNumber
@@ -127,7 +127,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.emit("moveCanvas", newLayers);
     }
 
-    renameCanvas(oldCanvasName: string, newCanvasName: string): void {
+    public renameCanvas(oldCanvasName: string, newCanvasName: string): void {
         if(typeof oldCanvasName !== "string") return;
         if(typeof this.layerNumber[oldCanvasName] === "undefined") return;
 
@@ -140,7 +140,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.emit("renameCanvas", this.layers[this.layerNumber[newCanvasName]], newCanvasName, oldCanvasName);
     }
 
-    getCanvases(): LayerArray<T> {
+    public getCanvases(): LayerArray<T> {
         return this.layers;
     }
 
