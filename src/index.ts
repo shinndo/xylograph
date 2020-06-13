@@ -1,22 +1,43 @@
 import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
 
+
+// Canvas
+export interface CanvasProperty {
+    name: string;
+    compositeOperation: string;
+    hidden: boolean;
+}
+interface XylographCanvas {
+    xylograph: CanvasProperty;
+}
+export type Canvas<T> = T & XylographCanvas;
+export type CanvasMap<T> = Map<string, Canvas<T>>;
+export type CanvasArray<T> = [string, Canvas<T>][];
+
+
+// Xylograph option
+export type CreateCanvasFunction<T> = (width: number, height: number) => T;
+export type xylographOption<T> = {
+    createCanvasFunction: CreateCanvasFunction<T>;
+    canvasWidth?: number;
+    canvasHeight?: number;
+};
+
+
+// Event
 export type AddCanvasEventListener = {
     <T>(canvas: Canvas<T>, canvasName: string): void
 };
-
 export type RemoveCanvasEventListener =  {
     (canvasName: string): void;
 };
-
 export type MoveCanvasEventListener = {
     <T>(canvases: CanvasMap<T>): void;
 };
-
 export type RenameCanvasEventListener = {
     <T>(canvas: Canvas<T>, newCanvasName: string, targetCanvasName: string): void;
 };
-
 interface Events {
     addCanvas: AddCanvasEventListener;
     removeCanvas: RemoveCanvasEventListener;
@@ -25,29 +46,8 @@ interface Events {
 }
 type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
 
-export interface CanvasProperty {
-    name: string;
-    compositeOperation: string;
-    hidden: boolean;
-}
 
-interface XylographCanvas {
-    xylograph: CanvasProperty;
-};
-
-export type Canvas<T> = T & XylographCanvas;
-
-type CanvasMap<T> = Map<string, Canvas<T>>;
-type CanvasArray<T> = [string, Canvas<T>][];
-
-export type CreateCanvasFunction<T> = (width: number, height: number) => T;
-
-export type xylographOption<T> = {
-    createCanvasFunction: CreateCanvasFunction<T>;
-    canvasWidth?: number;
-    canvasHeight?: number;
-};
-
+// Class
 export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent}) {
     private createCanvas: CreateCanvasFunction<T>;
     private canvasWidth: number;
