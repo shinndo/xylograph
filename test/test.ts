@@ -26,34 +26,162 @@ describe("Xylograph", () => {
     });
 
     test("addCanvas(name)", () => {
-        expect.assertions(5);
+        expect.assertions(10);
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock()
         });
         const name = "addNamedCanvasTest";
+        const afterName = "afterTest";
 
         // Simple add
-        const canvas = xg.addCanvas(name);
+        const canvas = xg.addCanvas(name);                       // "addNamedCanvasTest"
         expect(canvas.xylograph.name).toBe(name);
 
+        /*
+         *  [0] => "addNamedCanvasTest"
+         */
+
+        // Insert canvas (invalid: length < 2)
+        xg.addCanvas(afterName, 0);                              // "afterTest"
+        const canvases1 = xg.getCanvases();
+        expect(canvases1[1].xylograph.name).toBe(afterName);
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         */
+
         // Canvas name conflict (1)
-        const canvas1 = xg.addCanvas(name);
+        const canvas1 = xg.addCanvas(name);                      // "addNamedCanvasTest[1]"
         expect(canvas1.xylograph.name).toBe(name + "[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         */
+
+        // Insert canvas (invalid: afterOf > length - 1)
+        xg.addCanvas(afterName + "2", 3);                        // "afterTest2"
+        const canvases2 = xg.getCanvases();
+        expect(canvases2[3].xylograph.name).toBe(afterName + "2");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         */
         
         // Canvas name conflict (2)
-        xg.addCanvas(name + "[1][0]")
-        const canvas11 = xg.addCanvas(name + "[1][0]");
-        expect(canvas11.xylograph.name).toBe(name + "[1][1]")
+        xg.addCanvas(name + "[1][0]");                           // "addNamedCanvasTest[1][0]"
+        const canvas11 = xg.addCanvas(name + "[1][0]");          // "addNamedCanvasTest[1][1]"
+        expect(canvas11.xylograph.name).toBe(name + "[1][1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         */
 
         // Canvas name conflict (3)
-        xg.addCanvas(name + "[1]a");
-        const canvas1a1 = xg.addCanvas(name + "[1]a");
+        xg.addCanvas(name + "[1]a");                             // "addNamedCanvasTest[1]a"
+        const canvas1a1 = xg.addCanvas(name + "[1]a");           // "addNamedCanvasTest[1]a[1]"
         expect(canvas1a1.xylograph.name).toBe(name + "[1]a[1]");
 
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         *  [6] => "addNamedCanvasTest[1]a"
+         *  [7] => "addNamedCanvasTest[1]a[1]"
+         */
+
         // Canvas name conflict (4)
-        xg.addCanvas("");
-        const unnamedCanvas1 = xg.addCanvas("");
+        xg.addCanvas("");                                        // ""
+        const unnamedCanvas1 = xg.addCanvas("");                 // "[1]"
         expect(unnamedCanvas1.xylograph.name).toBe("[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         *  [6] => "addNamedCanvasTest[1]a"
+         *  [7] => "addNamedCanvasTest[1]a[1]"
+         *  [8] => ""
+         *  [9] => "[1]"
+         */
+
+        
+        // Insert canvas (canvasName) and name conflict
+        xg.addCanvas(afterName, name);                           // "afterTest[1]"
+        const canvases3 = xg.getCanvases();
+        expect(canvases3[1].xylograph.name).toBe(afterName + "[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "addNamedCanvasTest[1]"
+         *  [4] => "afterTest2"
+         *  [5] => "addNamedCanvasTest[1][0]"
+         *  [6] => "addNamedCanvasTest[1][1]"
+         *  [7] => "addNamedCanvasTest[1]a"
+         *  [8] => "addNamedCanvasTest[1]a[1]"
+         *  [9] => ""
+         *  [10] => "[1]"
+         */
+
+        // Insert canvas (canvasIndex)
+        xg.addCanvas(afterName + "3", 2);                        // "afterTest3"
+        const canvases4 = xg.getCanvases();
+        expect(canvases4[3].xylograph.name).toBe(afterName + "3");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "afterTest3"
+         *  [4] => "addNamedCanvasTest[1]"
+         *  [5] => "afterTest2"
+         *  [6] => "addNamedCanvasTest[1][0]"
+         *  [7] => "addNamedCanvasTest[1][1]"
+         *  [8] => "addNamedCanvasTest[1]a"
+         *  [9] => "addNamedCanvasTest[1]a[1]"
+         *  [10] => ""
+         *  [11] => "[1]"
+         */
+
+
+        // Insert canvas (invalid canvas name)
+        xg.addCanvas(afterName + "4", name + "hoge");            // "afterTest4"
+        const canvases5 = xg.getCanvases();
+        expect(canvases5[12].xylograph.name).toBe(afterName + "4");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "afterTest3"
+         *  [4] => "addNamedCanvasTest[1]"
+         *  [5] => "afterTest2"
+         *  [6] => "addNamedCanvasTest[1][0]"
+         *  [7] => "addNamedCanvasTest[1][1]"
+         *  [8] => "addNamedCanvasTest[1]a"
+         *  [9] => "addNamedCanvasTest[1]a[1]"
+         *  [10] => ""
+         *  [11] => "[1]"
+         *  [12] => "afterTest4"
+         */
     });
 
     test("getCanvas(name)", () => {

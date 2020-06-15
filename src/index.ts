@@ -178,13 +178,13 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
             }
         } else if(typeof afterOf === "string") {
             // Specified canvas name is invalid
-            if(!this.canvasIndexes[afterOf]) afterOf = undefined;
+            if(typeof this.canvasIndexes[afterOf] !== "number") afterOf = undefined;
         }
 
         if(typeof afterOf === "string") {
             // Create new canvas array
             const insertAfterOf = this.canvasIndexes[afterOf];
-            let newCanvases = this.canvases.slice(0, insertAfterOf);
+            let newCanvases = this.canvases.slice(0, insertAfterOf + 1);
             newCanvases.push(canvas);
             newCanvases = newCanvases.concat(this.canvases.slice(insertAfterOf + 1));
 
