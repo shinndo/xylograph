@@ -12,9 +12,8 @@ interface XylographCanvas {
     xylograph: CanvasProperty;
 }
 export type Canvas<T> = T & XylographCanvas;
-export type CanvasMap<T> = Map<string, Canvas<T>>;
 export type CanvasArray<T> = Canvas<T>[];
-
+export type CanvasIndexMap = {[canvasName: string]: number};
 
 // Xylograph option
 export type CreateCanvasFunction<T> = (width: number, height: number) => T;
@@ -33,10 +32,10 @@ export type RemoveCanvasEventListener =  {
     (canvasName: string): void;
 };
 export type MoveCanvasEventListener = {
-    <T>(canvases: CanvasMap<T>): void;
+    <T>(canvases: CanvasArray<T>): void;
 };
 export type SetCanvasesEventListener = {
-    <T>(canvases: CanvasMap<T>): void;
+    <T>(canvases: CanvasArray<T>): void;
 };
 export type RenameCanvasEventListener = {
     <T>(canvas: Canvas<T>, newCanvasName: string, targetCanvasName: string): void;
@@ -56,7 +55,8 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     private createCanvas: CreateCanvasFunction<T>;
     private canvasWidth: number;
     private canvasHeight: number;
-    private canvases: CanvasMap<T>;
+    private canvases: CanvasArray<T>;
+    private canvasIndexes: CanvasIndexMap;
 
     constructor(opt: xylographOption<T>) {
         super();
@@ -72,7 +72,8 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.createCanvas = opt.createCanvasFunction;
 
         // Init canvas array
-        this.canvases = new Map<string, Canvas<T>>();
+        this.canvases = [];
+        this.canvasIndexes = Object.create(null);
     }
 
     public addCanvas(canvasName: string, afterOf?: number | string, canvas?: Canvas<T>): Canvas<T> {
@@ -97,15 +98,21 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public getCanvas(canvasName: string): Canvas<T> | undefined {
-        return this.canvases.get(canvasName);
+        return this.canvases[this.canvasIndexes[canvasName]];
     }
 
     public removeCanvas(canvasName: string): void {
         if(typeof canvasName !== "string") return;
-        if(typeof this.canvases.get(canvasName) === "undefined") return;
+        if(typeof this.canvases[this.canvasIndexes[canvasName]] === "undefined") return;
 
         // Remove canvas
-        this.canvases.delete(canvasName);
+        this.canvases.splice(this.canvasIndexes[canvasName], 1);
+        delete this.canvasIndexes[canvasName];
+
+        // Update layerNumber	
+        for(let i = 0; i < this.canvases.length; i++) {	
+            this.canvasIndexes[this.getCanvasNameFromProperty(this.canvases[i])] = i;
+        }
         
         this.emit("removeCanvas", canvasName);
     }
@@ -113,12 +120,11 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     public moveCanvas(canvasNames: string[]): void {
         if(!Array.isArray(canvasNames)) return;
         
-        const newCanvases = new Map<string, Canvas<T>>();
+        const newCanvases: CanvasArray<T> = [];
         for(let i = 0; i < canvasNames.length; i++) {
-            const canvasName = canvasNames[i];
-            const canvas = this.getCanvas(canvasName);
+            const canvas = this.getCanvas(canvasNames[i]);
             if(canvas) {
-                newCanvases.set(canvasNames[i], canvas);
+                newCanvases.push(canvas);
             }     
         }
 
@@ -127,47 +133,35 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public renameCanvas(targetCanvasName: string, newCanvasName: string): string | undefined {
-        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || !this.canvases.has(targetCanvasName)) return undefined;
+        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || typeof this.canvases[this.canvasIndexes[targetCanvasName]] === "undefined") return undefined;
 
         // Get available newCanvasName
         newCanvasName = this.getAvailableCanvasName(newCanvasName);
 
-        const newCanvases = new Map<string, Canvas<T>>();
-        this.canvases.forEach((canvas: Canvas<T>, currentCanvasName: string) => {
-            let canvasName = currentCanvasName;
-            if(currentCanvasName === targetCanvasName) {
-                canvasName = newCanvasName;
-                this.setCanvasNameToProperty(canvas, newCanvasName);
-            }
+        // Rename
+        this.canvasIndexes[newCanvasName] = this.canvasIndexes[targetCanvasName];
+        delete this.canvasIndexes[targetCanvasName];
+        const canvas = this.canvases[this.canvasIndexes[newCanvasName]];
+        this.setCanvasNameToProperty(canvas, newCanvasName);
 
-            newCanvases.set(canvasName, canvas);
-        });
-
-        this.canvases = newCanvases;
-
-        this.emit("renameCanvas", this.canvases.get(newCanvasName) as Canvas<T>, newCanvasName, targetCanvasName);
+        this.emit("renameCanvas", canvas, newCanvasName, targetCanvasName);
         return newCanvasName;
     }
 
-    public getCanvases(): CanvasMap<T> {
+    public getCanvases(): CanvasArray<T> {
         return this.canvases;
     }
 
-    public setCanvases(canvases: CanvasMap<T> | CanvasArray<T>): void {
-        if(!Array.isArray(canvases) && !(canvases instanceof Map)) return;
+    public setCanvases(canvases: CanvasArray<T>): void {
+        if(!Array.isArray(canvases)) return;
 
-        if(canvases instanceof Map) {
-            // TODO: canvses type check
-            this.canvases = canvases;
-
-        } else if(Array.isArray(canvases)) {
-            const mapArray: [string, Canvas<T>][] = [];
-            for(let i = 0; i < canvases.length; i++) {
-                const canvas = canvases[i];
-                mapArray.push([this.getCanvasNameFromProperty(canvas), canvas]);
-            }
-            this.canvases = new Map<string, Canvas<T>>(mapArray);
+        // Create new canvasIndexes
+        const newCanvasIndexes: CanvasIndexMap = Object.create(null);
+        for(let i = 0; i < canvases.length; i++) {
+            newCanvasIndexes[this.getCanvasNameFromProperty(canvases[i])] = i;
         }
+        this.canvases = canvases;
+        this.canvasIndexes = newCanvasIndexes;
 
         this.emit("SetCanvases", this.canvases);
         return;
@@ -176,36 +170,37 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     private insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
         if(typeof afterOf === "number") {
             // afterOf: index number => canvas name
-            if(this.canvases.size >= 2 && afterOf < this.canvases.size - 1) {
-                const namesIt = this.canvases.keys();
-                for(let i = 0; i <= (afterOf as number); i++) {
-                    const itResult = namesIt.next();
-                    if(i === afterOf) {
-                        afterOf = itResult.value;
-                    }
-                }
+            if(this.canvases.length >= 2 && afterOf < this.canvases.length - 1) {
+                afterOf = this.getCanvasNameFromProperty(this.canvases[afterOf]);
             } else {
                 // Specified index number is invalid
                 afterOf = undefined;
             }
         } else if(typeof afterOf === "string") {
             // Specified canvas name is invalid
-            if(!this.canvases.has(afterOf)) afterOf = undefined;
+            if(!this.canvasIndexes[afterOf]) afterOf = undefined;
         }
 
-        if(typeof afterOf === "undefined") {
-            // Insert last
-            this.canvases.set(canvasName, canvas);
-        } else {
-            // Insert specified position
-            const newCanvases = new Map<string, Canvas<T>>();
-            this.canvases.forEach((canvas: Canvas<T>, canvasName: string) => {
-                newCanvases.set(canvasName, canvas);
-                if(canvasName === afterOf) {
-                    newCanvases.set(canvasName, canvas);
-                }
-            });
+        if(typeof afterOf === "string") {
+            // Create new canvas array
+            const insertAfterOf = this.canvasIndexes[afterOf];
+            let newCanvases = this.canvases.slice(0, insertAfterOf);
+            newCanvases.push(canvas);
+            newCanvases = newCanvases.concat(this.canvases.slice(insertAfterOf + 1));
+
+            // Create new canvas index map
+            const newCanvasIndexes = Object.create(null);
+            for(let i = 0; i < newCanvases.length; i++) {	
+                newCanvasIndexes[this.getCanvasNameFromProperty(newCanvases[i])] = i;
+            }
+
+            // Set new array and map
             this.canvases = newCanvases;
+            this.canvasIndexes = newCanvasIndexes;
+        } else {
+            // Add to end
+            this.canvases.push(canvas);
+            this.canvasIndexes[canvasName] = this.canvases.length - 1;
         }
     }
 
@@ -218,7 +213,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     private getAvailableCanvasName(canvasName: string): string {
-        while(this.canvases.has(canvasName)) canvasName = this.canvasNameIncrement(canvasName);
+        while(typeof this.canvasIndexes[canvasName] !== "undefined") canvasName = this.canvasNameIncrement(canvasName);
         return canvasName;
     }
 
