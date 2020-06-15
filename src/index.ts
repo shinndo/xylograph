@@ -102,8 +102,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public removeCanvas(canvasName: string): void {
-        if(typeof canvasName !== "string") return;
-        if(typeof this.canvases[this.canvasIndexes[canvasName]] === "undefined") return;
+        if(typeof canvasName !== "string" || !this.getCanvas(canvasName)) return;
 
         // Remove canvas
         this.canvases.splice(this.canvasIndexes[canvasName], 1);
@@ -133,7 +132,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public renameCanvas(targetCanvasName: string, newCanvasName: string): string | undefined {
-        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || typeof this.canvases[this.canvasIndexes[targetCanvasName]] === "undefined") return undefined;
+        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || !this.getCanvas(targetCanvasName)) return undefined;
 
         // Get available newCanvasName
         newCanvasName = this.getAvailableCanvasName(newCanvasName);
@@ -141,7 +140,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         // Rename
         this.canvasIndexes[newCanvasName] = this.canvasIndexes[targetCanvasName];
         delete this.canvasIndexes[targetCanvasName];
-        const canvas = this.canvases[this.canvasIndexes[newCanvasName]];
+        const canvas = this.getCanvas(newCanvasName) as Canvas<T>;
         this.setCanvasNameToProperty(canvas, newCanvasName);
 
         this.emit("renameCanvas", canvas, newCanvasName, targetCanvasName);
