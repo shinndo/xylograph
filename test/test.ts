@@ -1,5 +1,5 @@
 import { Xylograph, Canvas, CreateCanvasFunction } from "../src/index";
-import { createCanvas } from "canvas";
+import * as NodeCanvas from "canvas";
 
 interface MockCanvas {
     tag?: string;
@@ -26,34 +26,162 @@ describe("Xylograph", () => {
     });
 
     test("addCanvas(name)", () => {
-        expect.assertions(5);
+        expect.assertions(10);
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock()
         });
         const name = "addNamedCanvasTest";
+        const afterName = "afterTest";
 
         // Simple add
-        const canvas = xg.addCanvas(name);
+        const canvas = xg.addCanvas(name);                       // "addNamedCanvasTest"
         expect(canvas.xylograph.name).toBe(name);
 
+        /*
+         *  [0] => "addNamedCanvasTest"
+         */
+
+        // Insert canvas (invalid: length < 2)
+        xg.addCanvas(afterName, 0);                              // "afterTest"
+        const canvases1 = xg.getCanvases();
+        expect(canvases1[1].xylograph.name).toBe(afterName);
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         */
+
         // Canvas name conflict (1)
-        const canvas1 = xg.addCanvas(name);
+        const canvas1 = xg.addCanvas(name);                      // "addNamedCanvasTest[1]"
         expect(canvas1.xylograph.name).toBe(name + "[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         */
+
+        // Insert canvas (invalid: afterOf > length - 1)
+        xg.addCanvas(afterName + "2", 3);                        // "afterTest2"
+        const canvases2 = xg.getCanvases();
+        expect(canvases2[3].xylograph.name).toBe(afterName + "2");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         */
         
         // Canvas name conflict (2)
-        xg.addCanvas(name + "[1][0]")
-        const canvas11 = xg.addCanvas(name + "[1][0]");
-        expect(canvas11.xylograph.name).toBe(name + "[1][1]")
+        xg.addCanvas(name + "[1][0]");                           // "addNamedCanvasTest[1][0]"
+        const canvas11 = xg.addCanvas(name + "[1][0]");          // "addNamedCanvasTest[1][1]"
+        expect(canvas11.xylograph.name).toBe(name + "[1][1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         */
 
         // Canvas name conflict (3)
-        xg.addCanvas(name + "[1]a");
-        const canvas1a1 = xg.addCanvas(name + "[1]a");
+        xg.addCanvas(name + "[1]a");                             // "addNamedCanvasTest[1]a"
+        const canvas1a1 = xg.addCanvas(name + "[1]a");           // "addNamedCanvasTest[1]a[1]"
         expect(canvas1a1.xylograph.name).toBe(name + "[1]a[1]");
 
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         *  [6] => "addNamedCanvasTest[1]a"
+         *  [7] => "addNamedCanvasTest[1]a[1]"
+         */
+
         // Canvas name conflict (4)
-        xg.addCanvas("");
-        const unnamedCanvas1 = xg.addCanvas("");
+        xg.addCanvas("");                                        // ""
+        const unnamedCanvas1 = xg.addCanvas("");                 // "[1]"
         expect(unnamedCanvas1.xylograph.name).toBe("[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest"
+         *  [2] => "addNamedCanvasTest[1]"
+         *  [3] => "afterTest2"
+         *  [4] => "addNamedCanvasTest[1][0]"
+         *  [5] => "addNamedCanvasTest[1][1]"
+         *  [6] => "addNamedCanvasTest[1]a"
+         *  [7] => "addNamedCanvasTest[1]a[1]"
+         *  [8] => ""
+         *  [9] => "[1]"
+         */
+
+        
+        // Insert canvas (canvasName) and name conflict
+        xg.addCanvas(afterName, name);                           // "afterTest[1]"
+        const canvases3 = xg.getCanvases();
+        expect(canvases3[1].xylograph.name).toBe(afterName + "[1]");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "addNamedCanvasTest[1]"
+         *  [4] => "afterTest2"
+         *  [5] => "addNamedCanvasTest[1][0]"
+         *  [6] => "addNamedCanvasTest[1][1]"
+         *  [7] => "addNamedCanvasTest[1]a"
+         *  [8] => "addNamedCanvasTest[1]a[1]"
+         *  [9] => ""
+         *  [10] => "[1]"
+         */
+
+        // Insert canvas (canvasIndex)
+        xg.addCanvas(afterName + "3", 2);                        // "afterTest3"
+        const canvases4 = xg.getCanvases();
+        expect(canvases4[3].xylograph.name).toBe(afterName + "3");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "afterTest3"
+         *  [4] => "addNamedCanvasTest[1]"
+         *  [5] => "afterTest2"
+         *  [6] => "addNamedCanvasTest[1][0]"
+         *  [7] => "addNamedCanvasTest[1][1]"
+         *  [8] => "addNamedCanvasTest[1]a"
+         *  [9] => "addNamedCanvasTest[1]a[1]"
+         *  [10] => ""
+         *  [11] => "[1]"
+         */
+
+
+        // Insert canvas (invalid canvas name)
+        xg.addCanvas(afterName + "4", name + "hoge");            // "afterTest4"
+        const canvases5 = xg.getCanvases();
+        expect(canvases5[12].xylograph.name).toBe(afterName + "4");
+
+        /*
+         *  [0] => "addNamedCanvasTest"
+         *  [1] => "afterTest[1]"
+         *  [2] => "afterTest"
+         *  [3] => "afterTest3"
+         *  [4] => "addNamedCanvasTest[1]"
+         *  [5] => "afterTest2"
+         *  [6] => "addNamedCanvasTest[1][0]"
+         *  [7] => "addNamedCanvasTest[1][1]"
+         *  [8] => "addNamedCanvasTest[1]a"
+         *  [9] => "addNamedCanvasTest[1]a[1]"
+         *  [10] => ""
+         *  [11] => "[1]"
+         *  [12] => "afterTest4"
+         */
     });
 
     test("getCanvas(name)", () => {
@@ -96,7 +224,7 @@ describe("Xylograph", () => {
         expect(xg.getCanvas(name + "[3]")).toEqual(canvas3); // removeCanvasTest[3]
     });
 
-    test("moveCanvas(canvasMap)", () => {
+    test("moveCanvas(canvasName[])", () => {
         expect.assertions(7);
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock()
@@ -106,26 +234,26 @@ describe("Xylograph", () => {
         const middleName = "middle";
         const bottomName = "bottom";
 
-        const topCanvas = xg.addCanvas(topName);
-        const middleCanvas = xg.addCanvas(middleName);
-        const bottomCanvas = xg.addCanvas(bottomName);
+        xg.addCanvas(topName);
+        xg.addCanvas(middleName);
+        xg.addCanvas(bottomName);
         // (1) "top" (2) "middle" (3) "bottom"
         
-        const newOrder = new Map<string, Canvas<MockCanvas>>();
-        newOrder.set(bottomName, bottomCanvas);
-        newOrder.set(middleName, middleCanvas);
-        newOrder.set(topName, topCanvas);
+        const newOrder: string[] = [];
+        newOrder.push(bottomName);
+        newOrder.push(middleName);
+        newOrder.push(topName);
         // (1) "top" => "bottom" (2) "middle" => "middle" (3) "bottom" => "top"
         
         xg.moveCanvas(newOrder);
 
-        const orderIt = newOrder.entries();
+        const orderIt = newOrder.values();
         const movedCanvases = xg.getCanvases();
-        expect(movedCanvases.size).toEqual(newOrder.size);
-        movedCanvases.forEach((targetCanvas: Canvas<MockCanvas>, targetCanvasName: string) => {
-            const orderItResult = orderIt.next();
-            expect(targetCanvas).toEqual(orderItResult.value[1]);
-            expect(targetCanvasName).toEqual(orderItResult.value[0]);
+        expect(movedCanvases.length).toEqual(newOrder.length);
+        movedCanvases.forEach((targetCanvas: Canvas<MockCanvas>) => {
+            const orderCanvasName = orderIt.next().value;
+            expect(targetCanvas).toEqual(xg.getCanvas(orderCanvasName));
+            expect(targetCanvas.xylograph.name).toEqual(orderCanvasName);
         });
     });
 
@@ -138,19 +266,22 @@ describe("Xylograph", () => {
         const firstName = "1st";
         const secondName = "2nd";
         const thirdName = "3rd";
-        
-        const addCanvasOrder = new Map<string, Canvas<MockCanvas>>();
-        addCanvasOrder.set(firstName, xg.addCanvas(firstName));
-        addCanvasOrder.set(secondName, xg.addCanvas(secondName));
-        addCanvasOrder.set(thirdName, xg.addCanvas(thirdName));
+        xg.addCanvas(firstName)
+        xg.addCanvas(secondName)
+        xg.addCanvas(thirdName)
 
-        const orderIt = addCanvasOrder.entries();
+        const addCanvasOrder: string[] = [];
+        addCanvasOrder.push(firstName);
+        addCanvasOrder.push(secondName);
+        addCanvasOrder.push(thirdName);
+
+        const orderIt = addCanvasOrder.values();
         const targetCanvases = xg.getCanvases();
-        expect(targetCanvases.size).toEqual(addCanvasOrder.size);
-        targetCanvases.forEach((targetCanvas: Canvas<MockCanvas>, targetCanvasName: string) => {
-            const orderItResult = orderIt.next();
-            expect(targetCanvas).toEqual(orderItResult.value[1]);
-            expect(targetCanvasName).toEqual(orderItResult.value[0]);
+        expect(targetCanvases.length).toEqual(addCanvasOrder.length);
+        targetCanvases.forEach((targetCanvas: Canvas<MockCanvas>) => {
+            const orderCanvasName = orderIt.next().value;
+            expect(targetCanvas).toEqual(xg.getCanvas(orderCanvasName));
+            expect(targetCanvas.xylograph.name).toEqual(orderCanvasName);
         });
     });
 
@@ -180,24 +311,24 @@ describe("Xylograph", () => {
         expect(rename2Canvas).toEqual(xg.getCanvas(mainCanvasName + "[1]"))
 
         // All canvas check
-        const checkArray: {canvas: Canvas<MockCanvas>, canvasName: string}[] = [];
-        checkArray.push({canvas: renameCanvas, canvasName: newCanvasName});
-        checkArray.push({canvas: bgCanvas, canvasName: bgCanvasName});
-        checkArray.push({canvas: rename2Canvas, canvasName: mainCanvasName + "[1]"});
-        checkArray.push({canvas: mainCanvas, canvasName: mainCanvasName});
-        const checkIt = checkArray.entries();
+        const canvasNames: string[] = [];
+        canvasNames.push(newCanvasName);
+        canvasNames.push(bgCanvasName);
+        canvasNames.push(mainCanvasName + "[1]");
+        canvasNames.push(mainCanvasName);
+        const canvasNamesIt = canvasNames.values();
 
         const renamedCanvases = xg.getCanvases();
 
-        expect(renamedCanvases.size).toEqual(checkArray.length);
-        renamedCanvases.forEach((targetCanvas: Canvas<MockCanvas>, targetCanvasName: string) => {
-            const checkItValue = checkIt.next().value[1];
-            expect(targetCanvas).toEqual(checkItValue.canvas);
-            expect(targetCanvasName).toEqual(checkItValue.canvasName);
+        expect(renamedCanvases.length).toEqual(canvasNames.length);
+        renamedCanvases.forEach((targetCanvas: Canvas<MockCanvas>) => {
+            const canvasName = canvasNamesIt.next().value;
+            expect(targetCanvas).toEqual(xg.getCanvas(canvasName));
+            expect(targetCanvas.xylograph.name).toEqual(canvasName);
         });
     });
 
-    test.todo("duplicateCanvas(targetName, newCanvasName?)");
+    test.todo("duplicateCanvas(targetCanvasName, duplicateCanvasName?)");
     test.todo("margeCanvas(baseCanvas, margeCanvas[], compositeOperation)");
     test.todo("resize()");
     test.todo("createOutputStream()");
@@ -243,16 +374,16 @@ describe("Event", () => {
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock()
         });
-        const newOrder = new Map<string, Canvas<MockCanvas>>();
+        const newOrder: string[] = [];
 
         // Set event handler
-        xg.on("moveCanvas", (canvases: Map<string, Canvas<MockCanvas>>) => {
-            const orderIt = newOrder.entries();
-            expect(canvases.size).toEqual(newOrder.size);
-            canvases.forEach((canvas: Canvas<MockCanvas>, key: string) => {
-                const orderItResult = orderIt.next();
-                expect(canvas).toEqual(orderItResult.value[1]);
-                expect(key).toEqual(orderItResult.value[0]);
+        xg.on("moveCanvas", (canvases: Canvas<MockCanvas>[]) => {
+            const orderIt = newOrder.values();
+            expect(canvases.length).toEqual(newOrder.length);
+            canvases.forEach((targetCanvas: Canvas<MockCanvas>) => {
+                const orderCanvasName = orderIt.next().value;
+                expect(targetCanvas).toEqual(xg.getCanvas(orderCanvasName));
+                expect(targetCanvas.xylograph.name).toEqual(orderCanvasName);
             });
         });
 
@@ -260,17 +391,17 @@ describe("Event", () => {
         const secondName = "2nd";
         const thirdName = "3rd";
 
-        const firstCanvas = xg.addCanvas(firstName);
-        const secondCanvas = xg.addCanvas(secondName);
-        const thirdCanvas = xg.addCanvas(thirdName);
+        xg.addCanvas(firstName);
+        xg.addCanvas(secondName);
+        xg.addCanvas(thirdName);
         // (1) "1st" (2) "2nd" (3) "3rd"
 
-        newOrder.set(secondName, secondCanvas);
-        newOrder.set(thirdName, thirdCanvas);
-        newOrder.set(firstName, firstCanvas);
+        newOrder.push(secondName);
+        newOrder.push(thirdName);
+        newOrder.push(firstName);
         // (1) "1st" => "2nd" (2) "2nd" => "3rd" (3) "3rd" => "1st"
 
-        xg.moveCanvas(newOrder); // Fire event
+        xg.moveCanvas(newOrder); // Fire event        
     });
 
     test("renameCanvas", () => {
