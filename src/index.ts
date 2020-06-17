@@ -1,8 +1,10 @@
 import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
+import { type } from "os";
 
 
 // Canvas
+type GetContextFunction = (type: "2d") => any;
 export interface CanvasProperty {
     name: string;
     compositeOperation: string;
@@ -10,17 +12,22 @@ export interface CanvasProperty {
 }
 interface XylographCanvas {
     xylograph: CanvasProperty;
+    readonly width: number;
+    readonly height: number;
+    getContext: GetContextFunction
 }
-export type Canvas<T> = T & XylographCanvas;
+export type Canvas<T> = T & XylographCanvas; // Prioritize T
 export type CanvasArray<T> = Canvas<T>[];
 export type CanvasIndexMap = {[canvasName: string]: number};
 
 // Xylograph option
 export type CreateCanvasFunction<T> = (width: number, height: number) => T;
+export type CopyCanvasFunction<T> = (originCanvas: Canvas<T>) => Canvas<T>;
 export type xylographOption<T> = {
     createCanvasFunction: CreateCanvasFunction<T>;
     canvasWidth?: number;
     canvasHeight?: number;
+    copyCanvasFunction?: CopyCanvasFunction<T>;
 };
 
 
@@ -71,6 +78,11 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         }
         this.createCanvas = opt.createCanvasFunction;
 
+        // Set copyCanvas function
+        if(opt.copyCanvasFunction) {
+            this.copyCanvas = opt.copyCanvasFunction;
+        }
+
         // Init canvas array
         this.canvases = [];
         this.canvasIndexes = Object.create(null);
@@ -86,7 +98,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
 
         if(!canvas) {
             canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
-            this.setDefaultCanvasProperties(canvas, canvasName);
+            this.setDefaultCanvasProperty(canvas, canvasName);
         } else {
             this.setCanvasNameToProperty(canvas, canvasName);
         }
@@ -102,8 +114,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public removeCanvas(canvasName: string): void {
-        if(typeof canvasName !== "string") return;
-        if(typeof this.canvases[this.canvasIndexes[canvasName]] === "undefined") return;
+        if(typeof canvasName !== "string" || !this.getCanvas(canvasName)) return;
 
         // Remove canvas
         this.canvases.splice(this.canvasIndexes[canvasName], 1);
@@ -133,7 +144,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     }
 
     public renameCanvas(targetCanvasName: string, newCanvasName: string): string | undefined {
-        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || typeof this.canvases[this.canvasIndexes[targetCanvasName]] === "undefined") return undefined;
+        if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || !this.getCanvas(targetCanvasName)) return undefined;
 
         // Get available newCanvasName
         newCanvasName = this.getAvailableCanvasName(newCanvasName);
@@ -141,7 +152,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         // Rename
         this.canvasIndexes[newCanvasName] = this.canvasIndexes[targetCanvasName];
         delete this.canvasIndexes[targetCanvasName];
-        const canvas = this.canvases[this.canvasIndexes[newCanvasName]];
+        const canvas = this.getCanvas(newCanvasName) as Canvas<T>;
         this.setCanvasNameToProperty(canvas, newCanvasName);
 
         this.emit("renameCanvas", canvas, newCanvasName, targetCanvasName);
@@ -167,7 +178,21 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         return;
     }
 
+    public duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string): Canvas<T> | undefined {
+        if(typeof originCanvasName !== "string") return;
+        duplicateCanvasName = (typeof duplicateCanvasName === "string")? this.getAvailableCanvasName(duplicateCanvasName) : this.getAvailableCanvasName(originCanvasName);
+
+        const originCanvas = this.getCanvas(originCanvasName);
+        if(!originCanvas) return;
+        const newCanvas = this.copyCanvas(originCanvas);
+        this.setCanvasNameToProperty(newCanvas, duplicateCanvasName);
+        this.insertCanvas(newCanvas, duplicateCanvasName, originCanvasName);
+        return newCanvas;
+    }
+
     private insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
+        if(!canvas || typeof canvasName !== "string") return; 
+
         if(typeof afterOf === "number") {
             // afterOf: index number => canvas name
             if(this.canvases.length >= 2 && afterOf < this.canvases.length - 1) {
@@ -224,12 +249,33 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         return canvasName.replace(/\[[0-9]+\]$/, "[" + (num + 1) + "]");
     }
 
-    private setDefaultCanvasProperties(canvas: Canvas<T>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
+    private setDefaultCanvasProperty(canvas: Canvas<T>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
         canvas.xylograph = {
             name: canvasName,
             compositeOperation: compositeOperation,
             hidden: hidden
         }
+    }
+
+    private setCloneOfCanvasProperty(destCanvas: Canvas<T>, originCanvas: Canvas<T>): void {
+        const originProperty = originCanvas.xylograph;
+        destCanvas.xylograph = {
+            name: originProperty.name,
+            compositeOperation: originProperty.compositeOperation,
+            hidden: originProperty.hidden
+        };
+    }
+
+    private copyCanvas(originCanvas: Canvas<T>): Canvas<T> {
+        const width = (typeof originCanvas.width === "number")? originCanvas.width : this.canvasWidth;
+        const height = (typeof originCanvas.height === "number")? originCanvas.height : this.canvasHeight;
+
+        const newCanvas = this.createCanvas(width, height) as Canvas<T>;
+        const newCtx = newCanvas.getContext("2d");
+        const originCtx = originCanvas.getContext("2d");
+        newCtx.putImageData(originCtx.getImageData(0, 0, width, height), 0, 0);
+        this.setCloneOfCanvasProperty(newCanvas, originCanvas);
+        return newCanvas 
     }
 
     static createHTMLCanvas(width: number, height: number): HTMLCanvasElement {
