@@ -303,9 +303,9 @@ describe("Xylograph", () => {
         const bgCanvasName = "bg";
         const subCanvasName = "sub";
         const mainCanvasName = "main";
-        const bgCanvas = xg.addCanvas(bgCanvasName);        // "bg"
+        xg.addCanvas(bgCanvasName);                         // "bg"
         const rename2Canvas = xg.addCanvas(subCanvasName);  // "sub"
-        const mainCanvas = xg.addCanvas(mainCanvasName);    // "main"
+        xg.addCanvas(mainCanvasName);                       // "main"
         const renamed2Name = xg.renameCanvas(subCanvasName, mainCanvasName);     // "sub" => "main[1]"
         expect(renamed2Name).toEqual(mainCanvasName + "[1]");
         expect(rename2Canvas).toEqual(xg.getCanvas(mainCanvasName + "[1]"))
@@ -328,7 +328,83 @@ describe("Xylograph", () => {
         });
     });
 
-    test.todo("duplicateCanvas(targetCanvasName, duplicateCanvasName?)");
+    test("duplicateCanvas(targetCanvasName, duplicateCanvasName?)", () => {
+        expect.assertions(14);
+        const canvasWidth = 10;
+        const canvasHeight = 10;
+        const xg1 = new Xylograph<NodeCanvas.Canvas>({
+            createCanvasFunction: NodeCanvas.createCanvas,
+            canvasWidth: canvasWidth,
+            canvasHeight: canvasHeight
+        });
+
+        const originCanvasName = "originCanvas";
+        const duplicateCanvasName = "duplicateCanvas";
+        const testCompositeMode = "test-composite";
+        const testHiddenMode = true;        
+
+        // Simple copy
+        const originCanvas = xg1.addCanvas(originCanvasName);
+        originCanvas.xylograph.compositeOperation = testCompositeMode;
+        originCanvas.xylograph.hidden = testHiddenMode;
+        const originCtx = originCanvas.getContext("2d");
+        originCtx.fillStyle = "#FF0000";
+        originCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        const duplicateCanvas1 = xg1.duplicateCanvas(originCanvasName) as Canvas<NodeCanvas.Canvas>;
+        expect(duplicateCanvas1.xylograph.name).toEqual(originCanvasName + "[1]");
+        expect(duplicateCanvas1.getContext("2d").getImageData(0, 0, canvasWidth, canvasHeight).data).toEqual(originCanvas.getContext("2d").getImageData(0, 0, canvasWidth, canvasHeight).data);
+        expect(duplicateCanvas1.xylograph.compositeOperation).toEqual(testCompositeMode);
+        expect(duplicateCanvas1.xylograph.hidden).toEqual(testHiddenMode);
+
+        // Specified name
+        const duplicateCanvas2 = xg1.duplicateCanvas(originCanvasName, duplicateCanvasName) as Canvas<NodeCanvas.Canvas>;
+        expect(duplicateCanvas2.xylograph.name).toEqual(duplicateCanvasName);
+
+        // Deep copy
+        const testCompositeMode2 = "test-composite2";
+        originCtx.fillStyle = "#00FF00";
+        originCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+        originCanvas.xylograph.compositeOperation = testCompositeMode2;
+        originCanvas.xylograph.hidden = !testHiddenMode;
+        expect(duplicateCanvas1.getContext("2d").getImageData(0, 0, canvasWidth, canvasHeight).data).not.toEqual(originCanvas.getContext("2d").getImageData(0, 0, canvasWidth, canvasHeight).data);
+        expect(duplicateCanvas1.xylograph.compositeOperation).not.toEqual(originCanvas.xylograph.compositeOperation);
+        expect(duplicateCanvas1.xylograph.hidden).not.toEqual(originCanvas.xylograph.hidden);
+
+        // Insert position
+        // [0] => "originCanvas"
+        // [1] => "duplicateCanvas"
+        // [2] => "originCanvas[1]"
+        const duplicateCanvas3 = xg1.duplicateCanvas(duplicateCanvasName, duplicateCanvasName) as Canvas<NodeCanvas.Canvas>;
+        // [0] => "originCanvas"
+        // [1] => "duplicateCanvas"
+        // [2] => "duplicateCanvas[1]"
+        // [3] => "originCanvas[1]"
+        expect(duplicateCanvas3.xylograph.name).toEqual(duplicateCanvasName + "[1]");
+        expect(xg1.getCanvases()[2]).toEqual(duplicateCanvas3);
+
+        // Specified originCanvas is not exist
+        expect(xg1.duplicateCanvas("noname")).toBeUndefined();
+        
+        // Specified copyCanvasFunction
+        let copyFunctionRunned = false;
+        const shallowChangeName = "shallow";
+        const xg2 = new Xylograph<NodeCanvas.Canvas>({
+            createCanvasFunction: NodeCanvas.createCanvas,
+            copyCanvasFunction: (originCanvas: Canvas<NodeCanvas.Canvas>) => {
+                copyFunctionRunned = true;
+                return originCanvas;
+            },
+            canvasWidth: 1,
+            canvasHeight: 1
+        });
+        const shallowOriginCanvas = xg2.addCanvas(originCanvasName);
+        const shallowDuplicateCanvas = xg2.duplicateCanvas(originCanvasName, duplicateCanvasName) as Canvas<NodeCanvas.Canvas>;
+        expect(copyFunctionRunned).toEqual(true);
+        expect(shallowDuplicateCanvas.xylograph.name).toEqual(duplicateCanvasName);
+        shallowOriginCanvas.xylograph.name = shallowChangeName;
+        expect(shallowDuplicateCanvas.xylograph.name).toEqual(shallowChangeName);
+    });
+
     test.todo("margeCanvas(baseCanvas, margeCanvas[], compositeOperation)");
     test.todo("resize()");
     test.todo("createOutputStream()");
