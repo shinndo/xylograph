@@ -1,4 +1,4 @@
-import { Xylograph, Canvas, EventType } from "../src/index";
+import { Xylograph, Canvas, EventType, CanvasArray } from "../src/index";
 import * as NodeCanvas from "canvas";
 
 interface MockCanvas {
@@ -245,7 +245,8 @@ describe("Xylograph", () => {
         newOrder.push(topName);
         // (1) "top" => "bottom" (2) "middle" => "middle" (3) "bottom" => "top"
         
-        xg.moveCanvas(newOrder);
+        // Move canvas with unavailable name
+        xg.moveCanvas(["not_exist", newOrder[0], undefined as any, newOrder[1], "hoga", newOrder[2], undefined]);
 
         const movedCanvases = xg.getCanvases();
         expect(movedCanvases.length).toEqual(newOrder.length);
@@ -275,7 +276,6 @@ describe("Xylograph", () => {
         addCanvasOrder.push(secondName);
         addCanvasOrder.push(thirdName);
 
-        const orderIt = addCanvasOrder.values();
         const targetCanvases = xg.getCanvases();
         expect(targetCanvases.length).toEqual(addCanvasOrder.length);
         for(let i = 0; i < targetCanvases.length; i++) {
@@ -287,7 +287,57 @@ describe("Xylograph", () => {
         }
     });
 
-    test.todo("setCanvases()");
+    test("setCanvases()", () => {
+        expect.assertions(9);
+        const xg = new Xylograph<MockCanvas>({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+
+        const oldCanvasName = "old";
+        const newCanvasName = "new";
+
+        // Add old canvases
+        const oldCanvasNames: string[] = [];
+        oldCanvasNames.push(xg.addCanvas(oldCanvasName).xylograph.name);
+        oldCanvasNames.push(xg.addCanvas(oldCanvasName).xylograph.name);
+        const oldCanvases = xg.getCanvases();
+
+        // Check old canvases
+        expect(oldCanvasNames.length).toEqual(oldCanvases.length);
+        for(let i = 0; i < oldCanvases.length; i++) {
+            expect(oldCanvases[i].xylograph.name).toEqual(oldCanvasNames[i]);
+        }
+
+        // Ready new canvases
+        const newCanvases: CanvasArray<MockCanvas> = [];
+        const newCanvasNames: string[] = [];
+        
+        const newCanvas1 = createCanvasFunctionMock()(0, 0) as Canvas<MockCanvas>;
+        const newCanvas1Name = newCanvasName;
+        newCanvas1.xylograph = { name: newCanvas1Name, compositeOperation: "test", hidden: false};
+        newCanvases.push(newCanvas1);
+        newCanvasNames.push(newCanvas1Name);
+        const newCanvas2 = createCanvasFunctionMock()(0, 0) as Canvas<MockCanvas>;
+        const newCanvas2Name = newCanvasName + "[1]";
+        newCanvas2.xylograph = { name: newCanvas2Name, compositeOperation: "test", hidden: false};
+        newCanvases.push(newCanvas2);
+        newCanvasNames.push(newCanvas2Name);
+
+        // Set new canvases with undefined
+        xg.setCanvases([undefined as any, newCanvases[0], undefined as any, newCanvases[1], undefined as any]);
+
+        // Check new canases
+        const replacedCanvases = xg.getCanvases();
+        expect(replacedCanvases.length).toEqual(newCanvases.length);
+        expect(replacedCanvases.length).toEqual(newCanvasNames.length);
+        for(let i = 0; i < replacedCanvases.length; i++) {
+            const canvas = replacedCanvases[i];
+            const newCanvas = newCanvases[i];
+            const newCanvasName = newCanvasNames[i];
+            expect(canvas).toEqual(newCanvas);
+            expect(canvas.xylograph.name).toEqual(newCanvasName);
+        }
+    });
 
     test("renameCanvas(oldCanvasName, newCanvasName)", () => {
         expect.assertions(13);
@@ -463,7 +513,7 @@ describe("Event", () => {
         const newOrder: string[] = [];
 
         // Set event handler
-        xg.on("moveCanvas", (type: EventType, canvases: Canvas<MockCanvas>[], canvasNames: string[]) => {
+        xg.on("moveCanvas", (type: EventType, canvases: CanvasArray<MockCanvas>, canvasNames: string[]) => {
             expect(type).toEqual(eventType);
             expect(canvases.length).toEqual(newOrder.length);
             expect(canvases.length).toEqual(canvasNames.length);
