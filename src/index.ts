@@ -1,7 +1,5 @@
 import { EventEmitter } from "events";
 import StrictEventEmitter from "strict-event-emitter-types";
-import { type } from "os";
-
 
 // Canvas
 type GetContextFunction = (type: "2d") => any;

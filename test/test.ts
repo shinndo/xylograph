@@ -1,5 +1,6 @@
 import { Xylograph, Canvas, EventType, CanvasArray } from "../src/index";
 import * as NodeCanvas from "canvas";
+import { create } from "domain";
 
 interface MockCanvas {
     tag?: string;
@@ -459,7 +460,33 @@ describe("Xylograph", () => {
         expect(shallowDuplicateCanvas.xylograph.name).toEqual(shallowChangeName);
     });
 
-    test.todo("getCanvasNames()");
+    test("getCanvasNames()", () => {
+        expect.assertions(8);
+        const xg = new Xylograph<MockCanvas>({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+        
+        const firstName = "1st";
+        const secondName = "2nd";
+        const thirdName = "3rd";
+
+        const addCanvasNames: string[] = [];
+        addCanvasNames.push(xg.addCanvas(firstName).xylograph.name);
+        addCanvasNames.push(xg.addCanvas(secondName).xylograph.name);
+        addCanvasNames.push(xg.addCanvas(thirdName).xylograph.name);
+
+        const canvasNames = xg.getCanvasNames();
+        const canvases = xg.getCanvases();
+
+        expect(canvasNames.length).toEqual(addCanvasNames.length);
+        expect(canvasNames.length).toEqual(canvases.length);
+        for(let i = 0; i < canvasNames.length; i++) {
+            const canvasName = canvasNames[i];
+            expect(canvasName).toEqual(addCanvasNames[i])
+            expect(canvasName).toEqual(canvases[i].xylograph.name);
+        }
+    });
+
     test.todo("margeCanvas(baseCanvas, margeCanvas[], compositeOperation)");
     test.todo("resize()");
     test.todo("createOutputStream()");
@@ -569,7 +596,64 @@ describe("Event", () => {
         expect(renamedName).toBe(newName + "[1]");
     });
 
-    test.todo("setCanvas");
+    test("setCanvases", () => {
+        expect.assertions(7);
+        const eventType: EventType = "setCanvases";
+        const xg = new Xylograph<MockCanvas>({
+            createCanvasFunction: createCanvasFunctionMock()
+        });
+
+        const newCanvases: CanvasArray<MockCanvas> = [];
+        const newCanvasNames: string[] = [];
+
+        xg.on("SetCanvases", (type: EventType, canvases: CanvasArray<MockCanvas>, canvasNames: string[]) => {
+            expect(type).toEqual(eventType);
+            expect(canvases.length).toEqual(newCanvases.length);
+            expect(canvases.length).toEqual(newCanvasNames.length);
+
+            for(let i = 0; i < canvases.length; i++) {
+                const canvas = canvases[i];
+                expect(canvas).toEqual(newCanvases[i]);
+                expect(canvas.xylograph.name).toEqual(newCanvasNames[i]);
+            }
+        });
+
+        const newCanvasName = "new";
+        const newCanvas1 = createCanvasFunctionMock()(0, 0) as Canvas<MockCanvas>;
+        const newCanvas1Name = newCanvasName;
+        newCanvas1.xylograph = { name: newCanvas1Name, compositeOperation: "test", hidden: false};
+        newCanvases.push(newCanvas1);
+        newCanvasNames.push(newCanvas1Name);
+        const newCanvas2 = createCanvasFunctionMock()(0, 0) as Canvas<MockCanvas>;
+        const newCanvas2Name = newCanvasName + "[1]";
+        newCanvas2.xylograph = { name: newCanvas2Name, compositeOperation: "test", hidden: false};
+        newCanvases.push(newCanvas2);
+        newCanvasNames.push(newCanvas2Name);
+
+        xg.setCanvases(newCanvases);
+    });
+
+    test("duplicateCanvas", () => {
+        expect.assertions(3);
+        const eventType: EventType = "duplicateCanvas";
+        const xg = new Xylograph<NodeCanvas.Canvas>({
+            createCanvasFunction: NodeCanvas.createCanvas
+        });
+        
+        let newCanvas: Canvas<NodeCanvas.Canvas>;
+
+        xg.on("duplicateCanvas", (type: EventType, canvas: Canvas<NodeCanvas.Canvas>, canvasName: string) => {
+            expect(type).toEqual(eventType);
+            expect(canvas).not.toEqual(newCanvas);
+            expect(canvasName).toEqual(duplicateCanvasName);
+        });
+
+        const newCanvasName = "new";
+        const duplicateCanvasName = "duplicate";
+
+        newCanvas = xg.addCanvas(newCanvasName);
+        xg.duplicateCanvas(newCanvasName, duplicateCanvasName);
+    });
 });
 
 describe("Static", () => {
