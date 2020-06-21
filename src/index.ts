@@ -92,21 +92,6 @@ export class Xylograph<T> {
         }
     }
 
-    public moveCanvas(canvasNames: string[]): void {
-        if(!Array.isArray(canvasNames)) return;
-        
-        const newCanvases: CanvasArray<T> = [];
-        for(let i = 0; i < canvasNames.length; i++) {
-            const canvasName = canvasNames[i];
-            const canvas = this.getCanvas(canvasName);
-            if(canvas) {
-                newCanvases.push(canvas);
-            }     
-        }
-
-        this.replaceCanvases(newCanvases);
-    }
-
     public renameCanvas(targetCanvasName: string, newCanvasName: string): string | undefined {
         if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || !this.getCanvas(targetCanvasName)) return undefined;
 
@@ -122,14 +107,19 @@ export class Xylograph<T> {
         return newCanvasName;
     }
 
-    public getCanvases(): CanvasArray<T> {
-        return this.canvases;
-    }
+    public moveCanvas(canvasNames: string[]): void {
+        if(!Array.isArray(canvasNames)) return;
+        
+        const newCanvases: CanvasArray<T> = [];
+        for(let i = 0; i < canvasNames.length; i++) {
+            const canvasName = canvasNames[i];
+            const canvas = this.getCanvas(canvasName);
+            if(canvas) {
+                newCanvases.push(canvas);
+            }     
+        }
 
-    public setCanvases(canvases: CanvasArray<T>): void {
-        if(!Array.isArray(canvases)) return;
-        this.replaceCanvases(canvases);
-        return;
+        this.replaceCanvases(newCanvases);
     }
 
     public duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string): Canvas<T> | undefined {
@@ -143,6 +133,16 @@ export class Xylograph<T> {
         this.insertCanvas(newCanvas, duplicateCanvasName, originCanvasName);
 
         return newCanvas;
+    }
+
+    public getCanvases(): CanvasArray<T> {
+        return this.canvases;
+    }
+
+    public setCanvases(canvases: CanvasArray<T>): void {
+        if(!Array.isArray(canvases)) return;
+        this.replaceCanvases(canvases);
+        return;
     }
 
     public getCanvasNames(): string[] {

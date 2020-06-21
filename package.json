@@ -1,6 +1,6 @@
 {
   "name": "xylograph",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -24,10 +24,10 @@
   },
   "devDependencies": {
     "@types/jest": "^25.2.3",
-    "@types/node": "^14.0.1",
+    "@types/node": "^14.0.13",
     "jest": "^26.0.1",
-    "ts-jest": "^26.0.0",
-    "typescript": "^3.9.3"
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.5"
   },
   "types": "dist/index.d.ts",
   "jest": {
