@@ -1,6 +1,3 @@
-import { EventEmitter } from "events";
-import StrictEventEmitter from "strict-event-emitter-types";
-
 // Canvas
 type GetContextFunction = (type: "2d") => any;
 export interface CanvasProperty {
@@ -28,31 +25,8 @@ export type xylographOption<T> = {
     copyCanvasFunction?: CopyCanvasFunction<T>;
 };
 
-
-// Event
-export type EventType = "addCanvas" | "removeCanvas" | "renameCanvas" | "duplicateCanvas" | "moveCanvas" | "setCanvases";
-export type CanvasNameEventListener =  {
-    (eventType: EventType, canvasName: string): void;
-};
-export type CanvasEventListener = {
-    <T>(eventType: EventType, canvas: Canvas<T>, canvasName: string): void;
-};
-export type CanvasArrayEventListener = {
-    <T>(eventType: EventType, canvases: CanvasArray<T>, canvasNames: string[]): void;
-};
-interface Events {
-    addCanvas: CanvasEventListener;
-    removeCanvas: CanvasNameEventListener;
-    renameCanvas: CanvasEventListener;
-    duplicateCanvas: CanvasEventListener;
-    moveCanvas: CanvasArrayEventListener;
-    SetCanvases: CanvasArrayEventListener;
-}
-type XylographEmitterEvent = StrictEventEmitter<EventEmitter, Events>;
-
-
 // Class
-export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent}) {
+export class Xylograph<T> {
     private createCanvas: CreateCanvasFunction<T>;
     private canvasWidth: number;
     private canvasHeight: number;
@@ -60,7 +34,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
     private canvasIndexes: CanvasIndexMap;
 
     constructor(opt: xylographOption<T>) {
-        super();
 
         // Set canvas size
         this.canvasWidth = (opt.canvasWidth)? opt.canvasWidth : 200;
@@ -99,7 +72,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         
         this.insertCanvas(canvas, canvasName, afterOf);
 
-        this.emit("addCanvas", "addCanvas", canvas, canvasName);
         return canvas; 
     }
 
@@ -118,8 +90,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         for(let i = 0; i < this.canvases.length; i++) {	
             this.canvasIndexes[this.getCanvasNameFromProperty(this.canvases[i])] = i;
         }
-        
-        this.emit("removeCanvas", "removeCanvas", canvasName);
     }
 
     public moveCanvas(canvasNames: string[]): void {
@@ -135,7 +105,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         }
 
         this.replaceCanvases(newCanvases);
-        this.emit("moveCanvas", "moveCanvas", this.canvases, this.getCanvasNames());
     }
 
     public renameCanvas(targetCanvasName: string, newCanvasName: string): string | undefined {
@@ -150,7 +119,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         const canvas = this.getCanvas(newCanvasName) as Canvas<T>;
         this.setCanvasNameToProperty(canvas, newCanvasName);
 
-        this.emit("renameCanvas", "renameCanvas", canvas, newCanvasName);
         return newCanvasName;
     }
 
@@ -160,9 +128,7 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
 
     public setCanvases(canvases: CanvasArray<T>): void {
         if(!Array.isArray(canvases)) return;
-
         this.replaceCanvases(canvases);
-        this.emit("SetCanvases", "setCanvases", this.canvases, this.getCanvasNames());
         return;
     }
 
@@ -176,7 +142,6 @@ export class Xylograph<T> extends (EventEmitter as {new(): XylographEmitterEvent
         this.setCanvasNameToProperty(newCanvas, duplicateCanvasName);
         this.insertCanvas(newCanvas, duplicateCanvasName, originCanvasName);
 
-        this.emit("duplicateCanvas", "duplicateCanvas", newCanvas, duplicateCanvasName);
         return newCanvas;
     }
 
