@@ -18,8 +18,10 @@ export type CanvasIndexMap = {[canvasName: string]: number};
 // Xylograph option
 export type CreateCanvasFunction<T> = (width: number, height: number) => T;
 export type CopyCanvasFunction<T> = (originCanvas: Canvas<T>) => Canvas<T>;
+export type CreateImageFunction<T> = (canvas: Canvas<T>) => any;
 export type xylographOption<T> = {
     createCanvasFunction: CreateCanvasFunction<T>;
+    createImageFunction: CreateImageFunction<T>;
     canvasWidth?: number;
     canvasHeight?: number;
     copyCanvasFunction?: CopyCanvasFunction<T>;
@@ -28,6 +30,7 @@ export type xylographOption<T> = {
 // Class
 export class Xylograph<T> {
     private createCanvas: CreateCanvasFunction<T>;
+    private createImage: CreateImageFunction<T>;
     private canvasWidth: number;
     private canvasHeight: number;
     private canvases: CanvasArray<T>;
@@ -49,6 +52,11 @@ export class Xylograph<T> {
         if(opt.copyCanvasFunction) {
             this.copyCanvas = opt.copyCanvasFunction;
         }
+
+        if(!opt.createImageFunction) {
+            throw new Error("createCanvas function is undefined.");
+        }
+        this.createImage = opt.createImageFunction;
 
         // Init canvas array
         this.canvases = [];
@@ -135,6 +143,42 @@ export class Xylograph<T> {
         return newCanvas;
     }
 
+    public margeCanvas(margeCanvasNames: string[], forceCompositeOperation?: string): Canvas<T> | undefined {
+        if(!Array.isArray(margeCanvasNames)) return;
+
+        const margeTargetCanvasNames: string[] = [];
+        const canvasNames = this.getCanvasNames();
+        for(let i = 0; i < margeCanvasNames.length; i++) {
+            const margeCanvasName = margeCanvasNames[i];
+            if(canvasNames.includes(margeCanvasName)) margeTargetCanvasNames.push(margeCanvasName);
+        }
+
+        const newCanvases: CanvasArray<T> = [];
+        const newCanvasIndexes: CanvasIndexMap = Object.create(null);
+
+        // Create the canvas array after merging
+        for(let i = 0; i < this.canvases.length; i++) {
+            const canvas = this.canvases[i];
+            const canvasName = this.getCanvasNameFromProperty(canvas);
+            if(!margeTargetCanvasNames.includes(canvasName) || margeTargetCanvasNames[0] === canvasName) {
+                newCanvases.push(canvas);
+                newCanvasIndexes[canvasName] = i;
+            }
+        }
+
+        const margeCanvases: CanvasArray<T> = [];
+        for(let i = 0; i < margeTargetCanvasNames.length; i++) {
+            margeCanvases.push(this.getCanvas(margeTargetCanvasNames[i]) as Canvas<T>);
+        }
+
+        this.margeCanvases(margeCanvases, forceCompositeOperation);
+
+        this.canvases = newCanvases;
+        this.canvasIndexes = newCanvasIndexes;
+
+        return margeCanvases[0];
+    }
+
     public getCanvases(): CanvasArray<T> {
         return this.canvases;
     }
@@ -177,7 +221,7 @@ export class Xylograph<T> {
             newCanvases = newCanvases.concat(this.canvases.slice(insertAfterOf + 1));
 
             // Create new canvas index map
-            const newCanvasIndexes = Object.create(null);
+            const newCanvasIndexes: CanvasIndexMap = Object.create(null);
             for(let i = 0; i < newCanvases.length; i++) {	
                 newCanvasIndexes[this.getCanvasNameFromProperty(newCanvases[i])] = i;
             }
@@ -258,10 +302,30 @@ export class Xylograph<T> {
         return newCanvases;
     }
 
+    private margeCanvases(canvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
+        const baseCanvas = canvases[0];
+        const baseCtx = baseCanvas.getContext("2d");
+        for(let i = 1; i < canvases.length; i++) {
+            const canvas = canvases[i];
+            if(canvas.xylograph.hidden) continue;
+            baseCtx.globalCompositeOperation = (forceCompositeOperation)? forceCompositeOperation : canvas.xylograph.compositeOperation;
+            baseCtx.drawImage(this.createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
+        }
+
+        baseCtx.globalCompositeOperation = baseCanvas.xylograph.compositeOperation;
+        return baseCanvas;
+    }
+
     static createHTMLCanvas(width: number, height: number): HTMLCanvasElement {
         const canvas: HTMLCanvasElement = window.document.createElement("canvas");
         canvas.setAttribute("width", width.toString());
         canvas.setAttribute("height", height.toString());
         return canvas;
+    }
+
+    static createHTMLImage(canvas: Canvas<HTMLCanvasElement>): HTMLImageElement {
+        const image = window.document.createElement("img");
+        image.src = canvas.toDataURL("image/png");
+        return image;
     }
 }

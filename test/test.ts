@@ -13,13 +13,17 @@ const createCanvasFunctionMock = (tag?: string) => {
     }
 };
 
+const createImageFunctionMock = (canvas: Canvas<MockCanvas>) => {
+    return;
+};
 
 describe("Xylograph", () => {
     test("constructor", () => {
         expect.assertions(1);
         const notThrowInstantiate = () => {
             new Xylograph<MockCanvas>({
-                createCanvasFunction: createCanvasFunctionMock()
+                createCanvasFunction: createCanvasFunctionMock(),
+                createImageFunction: createImageFunctionMock
             });
         }
         expect(notThrowInstantiate).not.toThrow();
@@ -28,7 +32,8 @@ describe("Xylograph", () => {
     test("addCanvas(name)", () => {
         expect.assertions(10);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
         const name = "addNamedCanvasTest";
         const afterName = "afterTest";
@@ -187,7 +192,8 @@ describe("Xylograph", () => {
     test("getCanvas(name)", () => {
         expect.assertions(3);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
         const name = "getNamedCanvasTest";
 
@@ -206,7 +212,8 @@ describe("Xylograph", () => {
     test("removeCanvas(name)", () => {
         expect.assertions(4);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
         const name = "removeCanvasTest";
 
@@ -227,7 +234,8 @@ describe("Xylograph", () => {
     test("renameCanvas(oldCanvasName, newCanvasName)", () => {
         expect.assertions(13);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
 
         // Simple rename
@@ -270,7 +278,8 @@ describe("Xylograph", () => {
     test("moveCanvas(canvasName[])", () => {
         expect.assertions(7);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
 
         const topName = "top";
@@ -308,6 +317,11 @@ describe("Xylograph", () => {
         const canvasHeight = 10;
         const xg1 = new Xylograph<NodeCanvas.Canvas>({
             createCanvasFunction: NodeCanvas.createCanvas,
+            createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                const img = new NodeCanvas.Image();
+                img.src = canvas.toBuffer('image/png');
+                return img;
+            },
             canvasWidth: canvasWidth,
             canvasHeight: canvasHeight
         });
@@ -364,6 +378,11 @@ describe("Xylograph", () => {
         const shallowChangeName = "shallow";
         const xg2 = new Xylograph<NodeCanvas.Canvas>({
             createCanvasFunction: NodeCanvas.createCanvas,
+            createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                const img = new NodeCanvas.Image();
+                img.src = canvas.toBuffer('image/png');
+                return img;
+            },
             copyCanvasFunction: (originCanvas: Canvas<NodeCanvas.Canvas>) => {
                 copyFunctionRunned = true;
                 return originCanvas;
@@ -379,10 +398,29 @@ describe("Xylograph", () => {
         expect(shallowDuplicateCanvas.xylograph.name).toEqual(shallowChangeName);
     });
 
+    test("margeCanvas(canvasNames[], forceCompositeOperation?)", () => {
+        const xg = new Xylograph<NodeCanvas.Canvas>({
+            createCanvasFunction: NodeCanvas.createCanvas,
+            createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                const img = new NodeCanvas.Image();
+                img.src = canvas.toBuffer('image/png');
+                return img;
+            }
+        });
+        const canvas = xg.addCanvas("");
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage();
+
+        const rCanvas = NodeCanvas.createCanvas(1, 1);
+        const rCtx = rCanvas.getContext("2d");
+        rCtx.drawImage();
+    });
+
     test("getCanvases()", () => {
         expect.assertions(7);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
 
         const firstName = "1st";
@@ -411,7 +449,8 @@ describe("Xylograph", () => {
     test("setCanvases()", () => {
         expect.assertions(9);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
 
         const oldCanvasName = "old";
@@ -463,7 +502,8 @@ describe("Xylograph", () => {
     test("getCanvasNames()", () => {
         expect.assertions(8);
         const xg = new Xylograph<MockCanvas>({
-            createCanvasFunction: createCanvasFunctionMock()
+            createCanvasFunction: createCanvasFunctionMock(),
+            createImageFunction: createImageFunctionMock
         });
         
         const firstName = "1st";
@@ -487,7 +527,6 @@ describe("Xylograph", () => {
         }
     });
 
-    test.todo("margeCanvas(baseCanvas, margeCanvas[], compositeOperation)");
     test.todo("resize()");
     test.todo("createOutputStream()");
     test.todo("toDataURL()");
