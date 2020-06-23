@@ -157,12 +157,13 @@ export class Xylograph<T> {
         const newCanvasIndexes: CanvasIndexMap = Object.create(null);
 
         // Create the canvas array after merging
-        for(let i = 0; i < this.canvases.length; i++) {
+        for(let i = 0, newIndex = 0; i < this.canvases.length; i++) {
             const canvas = this.canvases[i];
             const canvasName = this.getCanvasNameFromProperty(canvas);
             if(!margeTargetCanvasNames.includes(canvasName) || margeTargetCanvasNames[0] === canvasName) {
                 newCanvases.push(canvas);
-                newCanvasIndexes[canvasName] = i;
+                newCanvasIndexes[canvasName] = newIndex;
+                newIndex++;
             }
         }
 

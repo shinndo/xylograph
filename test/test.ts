@@ -319,7 +319,7 @@ describe("Xylograph", () => {
             createCanvasFunction: NodeCanvas.createCanvas,
             createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
-                img.src = canvas.toBuffer('image/png');
+                img.src = canvas.toBuffer("image/png");
                 return img;
             },
             canvasWidth: canvasWidth,
@@ -380,7 +380,7 @@ describe("Xylograph", () => {
             createCanvasFunction: NodeCanvas.createCanvas,
             createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
-                img.src = canvas.toBuffer('image/png');
+                img.src = canvas.toBuffer("image/png");
                 return img;
             },
             copyCanvasFunction: (originCanvas: Canvas<NodeCanvas.Canvas>) => {
@@ -403,17 +403,113 @@ describe("Xylograph", () => {
             createCanvasFunction: NodeCanvas.createCanvas,
             createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
-                img.src = canvas.toBuffer('image/png');
+                img.src = canvas.toBuffer("image/png");
                 return img;
-            }
+            },
+            canvasWidth: 5,
+            canvasHeight: 5
         });
-        const canvas = xg.addCanvas("");
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage();
 
-        const rCanvas = NodeCanvas.createCanvas(1, 1);
-        const rCtx = rCanvas.getContext("2d");
-        rCtx.drawImage();
+        const notExistName = "hoge";
+        const bgCanvasName1 = "bg1";
+        const bgCanvasName2 = "bg2";
+        const normal1CanvasName1 = "normal1-1";
+        const normal1CanvasName2 = "normal1-2";
+        const hiddenCanvasName1 = "hidden1";
+        const hiddenCanvasName2 = "hidden2";
+        const multiCanvasName1 = "multi1";
+        const multiCanvasName2 = "multi2";
+        const notMargeCanvasName1 = "not-marge1";
+        const normal2CanvasName1 = "normal2-1";
+        const normal2CanvasName2 = "normal2-2";
+        const screenCanvasName1 = "screen1";
+        const screenCanvasName2 = "screen2";
+        const notMargeCanvasName2 = "not-marge2";
+
+        // bg canvas
+        const bgCanvas = xg.addCanvas(bgCanvasName1);
+        bgCanvas.xylograph.compositeOperation = "source-over";
+        const bgCtx = bgCanvas.getContext("2d");
+        bgCtx.fillStyle = "#808080";
+        bgCtx.fillRect(0, 0, 5, 5);
+        xg.duplicateCanvas(bgCanvasName1, bgCanvasName2);
+
+        // normal1 canvas
+        const normal1Canvas = xg.addCanvas(normal1CanvasName1);
+        normal1Canvas.xylograph.compositeOperation = "source-over";
+        const normal1Ctx = normal1Canvas.getContext("2d");
+        normal1Ctx.fillStyle = "#FF0000";
+        normal1Ctx.fillRect(0, 0, 1, 5);
+        xg.duplicateCanvas(normal1CanvasName1, normal1CanvasName2);
+
+        // hidden canvas
+        const hiddenCanvas = xg.addCanvas(hiddenCanvasName1);
+        hiddenCanvas.xylograph.compositeOperation = "source-over";
+        hiddenCanvas.xylograph.hidden = true;
+        const hiddenCtx = hiddenCanvas.getContext("2d");
+        hiddenCtx.fillStyle = "#000000";
+        hiddenCtx.fillRect(0, 0, 5, 5);
+        xg.duplicateCanvas(hiddenCanvasName1, hiddenCanvasName2);
+
+        // multi canvas
+        const multiCanvas = xg.addCanvas(multiCanvasName1);
+        multiCanvas.xylograph.compositeOperation = "multiply";
+        const multiCtx = multiCanvas.getContext("2d");
+        multiCtx.fillStyle = "#0000FF";
+        multiCtx.fillRect(0, 1, 5, 1);
+        xg.duplicateCanvas(multiCanvasName1, multiCanvasName2);
+
+        // not-marge1 canvas
+        const notMarge1Canvas = xg.addCanvas(notMargeCanvasName1);
+        notMarge1Canvas.xylograph.compositeOperation = "source-over";
+        const notMarge1Ctx = notMarge1Canvas.getContext("2d");
+        notMarge1Ctx.fillStyle = "#FFFFFF";
+        notMarge1Ctx.fillRect(0, 0, 5, 5);
+
+        // normal2 canvas
+        const normal2Canvas = xg.addCanvas(normal2CanvasName1);
+        normal2Canvas.xylograph.compositeOperation = "source-over";
+        const normal2Ctx = normal2Canvas.getContext("2d");
+        normal2Ctx.fillStyle = "#00FF00";
+        normal2Ctx.fillRect(3, 0, 1, 5);
+        xg.duplicateCanvas(normal2CanvasName1, normal2CanvasName2);
+
+        // screen canvas
+        const screenCanvas = xg.addCanvas(screenCanvasName1);
+        screenCanvas.xylograph.compositeOperation = "screen";
+        const screenCtx = screenCanvas.getContext("2d");
+        screenCtx.fillStyle = "#FFFF00";
+        screenCtx.fillRect(0, 3, 5, 1);
+        xg.duplicateCanvas(screenCanvasName1, screenCanvasName2);
+
+        // not-marge2 canvas
+        const notMarge2Canvas = xg.addCanvas(notMargeCanvasName2);
+        notMarge2Canvas.xylograph.compositeOperation = "source-over";
+        const notMarge2Ctx = notMarge2Canvas.getContext("2d");
+        notMarge2Ctx.fillStyle = "#FFFFFF";
+        notMarge2Ctx.fillRect(0, 0, 5, 5);
+
+        // marge 1
+        const margedCanvas1 = xg.margeCanvas([bgCanvasName1, normal1CanvasName1, hiddenCanvasName1, multiCanvasName1, normal2CanvasName1, notExistName, screenCanvasName1]) as Canvas<NodeCanvas.Canvas>;
+        expect(Array.from(margedCanvas1.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
+            255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
+              0,   0,   0, 255,   0,   0, 128, 255,   0,   0, 128, 255,   0, 255,   0, 255,   0,   0, 128, 255,
+            255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
+            255, 255,   0, 255, 255, 255, 128, 255, 255, 255, 128, 255, 255, 255,   0, 255, 255, 255, 128, 255,
+            255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255
+        ]);
+        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, bgCanvasName2, normal1CanvasName2, hiddenCanvasName2, multiCanvasName2, notMargeCanvasName1, normal2CanvasName2, screenCanvasName2, notMargeCanvasName2]);
+
+        // marge 2
+        const margedCanvas2 = xg.margeCanvas([normal1CanvasName2, bgCanvasName2, hiddenCanvasName2, normal2CanvasName2, notExistName, screenCanvasName2, multiCanvasName2], "source-over") as Canvas<NodeCanvas.Canvas>;
+        expect(Array.from(margedCanvas2.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
+            128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
+              0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,
+            128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
+            255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255,
+            128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255
+        ]);
+        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, normal1CanvasName2, notMargeCanvasName1, notMargeCanvasName2]);
     });
 
     test("getCanvases()", () => {
