@@ -29,8 +29,8 @@ export type xylographOption<T> = {
 
 // Class
 export class Xylograph<T> {
-    private createCanvas: CreateCanvasFunction<T>;
-    private createImage: CreateImageFunction<T>;
+    private _createCanvas: CreateCanvasFunction<T>;
+    private _createImage: CreateImageFunction<T>;
     private canvasWidth: number;
     private canvasHeight: number;
     private canvases: CanvasArray<T>;
@@ -46,17 +46,17 @@ export class Xylograph<T> {
         if(!opt.createCanvasFunction) {
             throw new Error("createCanvas function is undefined.");
         }
-        this.createCanvas = opt.createCanvasFunction;
+        this._createCanvas = opt.createCanvasFunction;
 
         // Set copyCanvas function
         if(opt.copyCanvasFunction) {
-            this.copyCanvas = opt.copyCanvasFunction;
+            this._copyCanvas = opt.copyCanvasFunction;
         }
 
         if(!opt.createImageFunction) {
             throw new Error("createCanvas function is undefined.");
         }
-        this.createImage = opt.createImageFunction;
+        this._createImage = opt.createImageFunction;
 
         // Init canvas array
         this.canvases = [];
@@ -69,16 +69,16 @@ export class Xylograph<T> {
         }
 
         // Get available canvasName
-        canvasName = this.getAvailableCanvasName(canvasName);
+        canvasName = this._getAvailableCanvasName(canvasName);
 
         if(!canvas) {
-            canvas = this.createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
-            this.setDefaultCanvasProperty(canvas, canvasName);
+            canvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
+            this._setDefaultCanvasProperty(canvas, canvasName);
         } else {
-            this.setCanvasNameToProperty(canvas, canvasName);
+            this._setCanvasNameToProperty(canvas, canvasName);
         }
         
-        this.insertCanvas(canvas, canvasName, afterOf);
+        this._insertCanvas(canvas, canvasName, afterOf);
 
         return canvas; 
     }
@@ -96,7 +96,7 @@ export class Xylograph<T> {
 
         // Update layerNumber	
         for(let i = 0; i < this.canvases.length; i++) {	
-            this.canvasIndexes[this.getCanvasNameFromProperty(this.canvases[i])] = i;
+            this.canvasIndexes[this._getCanvasNameFromProperty(this.canvases[i])] = i;
         }
     }
 
@@ -104,13 +104,13 @@ export class Xylograph<T> {
         if(typeof targetCanvasName !== "string" || typeof newCanvasName !== "string" || !this.getCanvas(targetCanvasName)) return undefined;
 
         // Get available newCanvasName
-        newCanvasName = this.getAvailableCanvasName(newCanvasName);
+        newCanvasName = this._getAvailableCanvasName(newCanvasName);
 
         // Rename
         this.canvasIndexes[newCanvasName] = this.canvasIndexes[targetCanvasName];
         delete this.canvasIndexes[targetCanvasName];
         const canvas = this.getCanvas(newCanvasName) as Canvas<T>;
-        this.setCanvasNameToProperty(canvas, newCanvasName);
+        this._setCanvasNameToProperty(canvas, newCanvasName);
 
         return newCanvasName;
     }
@@ -127,18 +127,18 @@ export class Xylograph<T> {
             }     
         }
 
-        this.replaceCanvases(newCanvases);
+        this._replaceCanvases(newCanvases);
     }
 
     public duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string): Canvas<T> | undefined {
         if(typeof originCanvasName !== "string") return;
-        duplicateCanvasName = (typeof duplicateCanvasName === "string")? this.getAvailableCanvasName(duplicateCanvasName) : this.getAvailableCanvasName(originCanvasName);
+        duplicateCanvasName = (typeof duplicateCanvasName === "string")? this._getAvailableCanvasName(duplicateCanvasName) : this._getAvailableCanvasName(originCanvasName);
 
         const originCanvas = this.getCanvas(originCanvasName);
         if(!originCanvas) return;
-        const newCanvas = this.copyCanvas(originCanvas);
-        this.setCanvasNameToProperty(newCanvas, duplicateCanvasName);
-        this.insertCanvas(newCanvas, duplicateCanvasName, originCanvasName);
+        const newCanvas = this._copyCanvas(originCanvas);
+        this._setCanvasNameToProperty(newCanvas, duplicateCanvasName);
+        this._insertCanvas(newCanvas, duplicateCanvasName, originCanvasName);
 
         return newCanvas;
     }
@@ -159,7 +159,7 @@ export class Xylograph<T> {
         // Create the canvas array after merging
         for(let i = 0, newIndex = 0; i < this.canvases.length; i++) {
             const canvas = this.canvases[i];
-            const canvasName = this.getCanvasNameFromProperty(canvas);
+            const canvasName = this._getCanvasNameFromProperty(canvas);
             if(!margeTargetCanvasNames.includes(canvasName) || margeTargetCanvasNames[0] === canvasName) {
                 newCanvases.push(canvas);
                 newCanvasIndexes[canvasName] = newIndex;
@@ -172,7 +172,7 @@ export class Xylograph<T> {
             margeCanvases.push(this.getCanvas(margeTargetCanvasNames[i]) as Canvas<T>);
         }
 
-        this.margeCanvases(margeCanvases, forceCompositeOperation);
+        this._margeCanvases(margeCanvases, forceCompositeOperation);
 
         this.canvases = newCanvases;
         this.canvasIndexes = newCanvasIndexes;
@@ -186,7 +186,7 @@ export class Xylograph<T> {
 
     public setCanvases(canvases: CanvasArray<T>): void {
         if(!Array.isArray(canvases)) return;
-        this.replaceCanvases(canvases);
+        this._replaceCanvases(canvases);
         return;
     }
 
@@ -198,13 +198,13 @@ export class Xylograph<T> {
         return canvasNames;
     }
 
-    private insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
+    private _insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
         if(!canvas || typeof canvasName !== "string") return; 
 
         if(typeof afterOf === "number") {
             // afterOf: index number => canvas name
             if(this.canvases.length >= 2 && afterOf < this.canvases.length - 1) {
-                afterOf = this.getCanvasNameFromProperty(this.canvases[afterOf]);
+                afterOf = this._getCanvasNameFromProperty(this.canvases[afterOf]);
             } else {
                 // Specified index number is invalid
                 afterOf = undefined;
@@ -224,7 +224,7 @@ export class Xylograph<T> {
             // Create new canvas index map
             const newCanvasIndexes: CanvasIndexMap = Object.create(null);
             for(let i = 0; i < newCanvases.length; i++) {	
-                newCanvasIndexes[this.getCanvasNameFromProperty(newCanvases[i])] = i;
+                newCanvasIndexes[this._getCanvasNameFromProperty(newCanvases[i])] = i;
             }
 
             // Set new array and map
@@ -237,27 +237,27 @@ export class Xylograph<T> {
         }
     }
 
-    private getCanvasNameFromProperty(canvas: Canvas<T>): string {
+    private _getCanvasNameFromProperty(canvas: Canvas<T>): string {
         return canvas.xylograph.name;
     }
 
-    private setCanvasNameToProperty(canvas: Canvas<T>, canvasName: string): void {
+    private _setCanvasNameToProperty(canvas: Canvas<T>, canvasName: string): void {
         canvas.xylograph.name = canvasName;
     }
 
-    private getAvailableCanvasName(canvasName: string): string {
-        while(typeof this.canvasIndexes[canvasName] !== "undefined") canvasName = this.canvasNameIncrement(canvasName);
+    private _getAvailableCanvasName(canvasName: string): string {
+        while(typeof this.canvasIndexes[canvasName] !== "undefined") canvasName = this._canvasNameIncrement(canvasName);
         return canvasName;
     }
 
-    private canvasNameIncrement(canvasName: string): string {
+    private _canvasNameIncrement(canvasName: string): string {
         const incrementMark: RegExpMatchArray | null = canvasName.match(/\[[0-9]+\]$/);
         if(!incrementMark) return canvasName + "[1]";
         const num = parseInt(incrementMark.toString().slice(1, -1));
         return canvasName.replace(/\[[0-9]+\]$/, "[" + (num + 1) + "]");
     }
 
-    private setDefaultCanvasProperty(canvas: Canvas<T>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
+    private _setDefaultCanvasProperty(canvas: Canvas<T>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
         canvas.xylograph = {
             name: canvasName,
             compositeOperation: compositeOperation,
@@ -265,7 +265,7 @@ export class Xylograph<T> {
         }
     }
 
-    private setCloneOfCanvasProperty(destCanvas: Canvas<T>, originCanvas: Canvas<T>): void {
+    private _setCloneOfCanvasProperty(destCanvas: Canvas<T>, originCanvas: Canvas<T>): void {
         const originProperty = originCanvas.xylograph;
         destCanvas.xylograph = {
             name: originProperty.name,
@@ -274,25 +274,25 @@ export class Xylograph<T> {
         };
     }
 
-    private copyCanvas(originCanvas: Canvas<T>): Canvas<T> {
+    private _copyCanvas(originCanvas: Canvas<T>): Canvas<T> {
         const width = (typeof originCanvas.width === "number")? originCanvas.width : this.canvasWidth;
         const height = (typeof originCanvas.height === "number")? originCanvas.height : this.canvasHeight;
 
-        const newCanvas = this.createCanvas(width, height) as Canvas<T>;
+        const newCanvas = this._createCanvas(width, height) as Canvas<T>;
         const newCtx = newCanvas.getContext("2d");
         const originCtx = originCanvas.getContext("2d");
         newCtx.putImageData(originCtx.getImageData(0, 0, width, height), 0, 0);
-        this.setCloneOfCanvasProperty(newCanvas, originCanvas);
+        this._setCloneOfCanvasProperty(newCanvas, originCanvas);
         return newCanvas 
     }
 
-    private replaceCanvases(canvases: CanvasArray<T>): CanvasArray<T> {
+    private _replaceCanvases(canvases: CanvasArray<T>): CanvasArray<T> {
         const newCanvases: CanvasArray<T> = [];
         const newCanvasIndexes: CanvasIndexMap = Object.create(null);
         for(let i = 0; i < canvases.length; i++) {
             const canvas = canvases[i];
             if(canvas) {
-                const canvasName = this.getCanvasNameFromProperty(canvas);
+                const canvasName = this._getCanvasNameFromProperty(canvas);
                 newCanvases.push(canvas);
                 newCanvasIndexes[canvasName] = i;
             }
@@ -303,14 +303,14 @@ export class Xylograph<T> {
         return newCanvases;
     }
 
-    private margeCanvases(canvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
+    private _margeCanvases(canvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
         const baseCanvas = canvases[0];
         const baseCtx = baseCanvas.getContext("2d");
         for(let i = 1; i < canvases.length; i++) {
             const canvas = canvases[i];
             if(canvas.xylograph.hidden) continue;
             baseCtx.globalCompositeOperation = (forceCompositeOperation)? forceCompositeOperation : canvas.xylograph.compositeOperation;
-            baseCtx.drawImage(this.createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
+            baseCtx.drawImage(this._createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
         }
 
         baseCtx.globalCompositeOperation = baseCanvas.xylograph.compositeOperation;
