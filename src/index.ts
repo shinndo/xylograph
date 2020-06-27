@@ -198,6 +198,24 @@ export class Xylograph<T> {
         return canvasNames;
     }
 
+    public resize(width: number, height: number, sx?: number, sy?: number, sw?: number, sh?: number): void {
+        if(typeof width !== "number" || typeof height !== "number") return;
+        if(typeof sx !== "number") sx = 0;
+        if(typeof sy !== "number") sy = 0;
+
+        for(let i = 0; i < this.canvases.length; i++) {
+            const originCanvas = this.canvases[i];
+            const newCanvas = this._createCanvas(width, height) as Canvas<T>;
+            const newCtx = newCanvas.getContext("2d");
+            newCtx.drawImage(this._createImage(originCanvas), sx, sy, sw || originCanvas.width, sh || originCanvas.height, 0, 0, width, height);
+            this._setCloneOfCanvasProperty(newCanvas, originCanvas);
+            this.canvases[i] = newCanvas;
+        }
+
+        this.canvasWidth = width;
+        this.canvasHeight = height;
+    }
+
     private _insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
         if(!canvas || typeof canvasName !== "string") return; 
 
