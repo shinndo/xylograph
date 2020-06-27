@@ -542,7 +542,7 @@ describe("Xylograph", () => {
         }
     });
 
-    test("setCanvases()", () => {
+    test("setCanvases(canvas[])", () => {
         expect.assertions(9);
         const xg = new Xylograph<MockCanvas>({
             createCanvasFunction: createCanvasFunctionMock(),
@@ -623,7 +623,155 @@ describe("Xylograph", () => {
         }
     });
 
-    test.todo("resize()");
+    test("resize(width, height, sx?, sy?, sw?, sh?)", () => {
+        function createXylograph() {
+            return new Xylograph<NodeCanvas.Canvas>({
+                createCanvasFunction: NodeCanvas.createCanvas,
+                createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                    const img = new NodeCanvas.Image();
+                    img.src = canvas.toBuffer("image/png");
+                    return img;
+                },
+                canvasWidth: 10,
+                canvasHeight: 10
+            });
+        }
+
+        function fillCanvas(canvas: Canvas<NodeCanvas.Canvas>, innerColor: string, outerColor: string) {
+            const ctx = canvas.getContext("2d");
+            ctx.fillStyle = outerColor;
+            ctx.fillRect(0, 0, 10, 10);
+            ctx.fillStyle = innerColor;
+            ctx.fillRect(2, 2, 6, 6);
+        }
+
+        function getSampleColor(canvas: Canvas<NodeCanvas.Canvas>) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const ctx = canvas.getContext("2d");
+            const imageBytes = ctx.getImageData(0, 0, w, h).data;
+
+            const halfWidth = Math.floor(w / 2);
+            const halfHeight = Math.floor(h / 2);
+            return {
+                //  [r, g, b]
+                tl: [imageBytes[0], imageBytes[1], imageBytes[2]],
+                tr: [imageBytes[w * 4 - 4], imageBytes[w * 4 - 3], imageBytes[w * 4 - 2]],
+                bl: [imageBytes[w * (h - 1) * 4], imageBytes[w * (h - 1) * 4 + 1], imageBytes[w * (h - 1) * 4 + 2]],
+                br: [imageBytes[w * h * 4 - 4], imageBytes[w * h * 4 - 3], imageBytes[w * h * 4 - 2]],
+                tc: [imageBytes[halfWidth * 4], imageBytes[halfWidth * 4 + 1], imageBytes[halfWidth * 4 + 2]],
+                lc: [imageBytes[w * halfHeight * 4], imageBytes[w * halfHeight * 4 + 1], imageBytes[w * halfHeight * 4 + 2]],
+                rc: [imageBytes[w * halfHeight * 4 + w * 4 - 4], imageBytes[w * halfHeight * 4 + w * 4 - 3], imageBytes[w * halfHeight * 4 + w * 4 - 2]],
+                bc: [imageBytes[w * (h - 1) * 4 + halfWidth * 4], imageBytes[w * (h - 1) * 4 + halfWidth * 4 + 1], imageBytes[w * (h - 1) * 4 + halfWidth * 4 + 2]],
+                c: [imageBytes[w * halfHeight * 4 + halfWidth * 4], imageBytes[w * halfHeight * 4 + halfWidth * 4 + 1], imageBytes[w * halfHeight * 4 + halfWidth * 4 + 2]]
+            };
+        }
+
+        function colorCheck(canvas: Canvas<NodeCanvas.Canvas>, centerColor: "r" | "g" | "b", perimeterColor: "r" | "g" | "b") {
+            const sampleColors = getSampleColor(canvas);
+
+            switch(centerColor) {
+                case "r":
+                    expect(sampleColors.c[0]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.c[1]).toBeLessThan(128);
+                    expect(sampleColors.c[2]).toBeLessThan(128);
+                    break;
+                case "g":
+                    expect(sampleColors.c[0]).toBeLessThan(128);
+                    expect(sampleColors.c[1]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.c[2]).toBeLessThan(128);
+                    break;
+                case "b":
+                    expect(sampleColors.c[0]).toBeLessThan(128);
+                    expect(sampleColors.c[1]).toBeLessThan(128);
+                    expect(sampleColors.c[2]).toBeGreaterThanOrEqual(128);
+                    break;
+            }
+
+            switch(perimeterColor) {
+                case "r":
+                    expect(sampleColors.tc[0]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.tc[1]).toBeLessThan(128);
+                    expect(sampleColors.tc[2]).toBeLessThan(128);
+                    expect(sampleColors.lc[0]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.lc[1]).toBeLessThan(128);
+                    expect(sampleColors.lc[2]).toBeLessThan(128);
+                    expect(sampleColors.rc[0]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.rc[1]).toBeLessThan(128);
+                    expect(sampleColors.rc[2]).toBeLessThan(128);
+                    expect(sampleColors.bc[0]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.bc[1]).toBeLessThan(128);
+                    expect(sampleColors.bc[2]).toBeLessThan(128);
+                    break;
+                case "g":
+                    expect(sampleColors.tc[0]).toBeLessThan(128);
+                    expect(sampleColors.tc[1]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.tc[2]).toBeLessThan(128);
+                    expect(sampleColors.lc[0]).toBeLessThan(128);
+                    expect(sampleColors.lc[1]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.lc[2]).toBeLessThan(128);
+                    expect(sampleColors.rc[0]).toBeLessThan(128);
+                    expect(sampleColors.rc[1]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.rc[2]).toBeLessThan(128);
+                    expect(sampleColors.bc[0]).toBeLessThan(128);
+                    expect(sampleColors.bc[1]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.bc[2]).toBeLessThan(128);
+                    break;
+                case "b":
+                    expect(sampleColors.tc[0]).toBeLessThan(128);
+                    expect(sampleColors.tc[1]).toBeLessThan(128);
+                    expect(sampleColors.tc[2]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.lc[0]).toBeLessThan(128);
+                    expect(sampleColors.lc[1]).toBeLessThan(128);
+                    expect(sampleColors.lc[2]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.rc[0]).toBeLessThan(128);
+                    expect(sampleColors.rc[1]).toBeLessThan(128);
+                    expect(sampleColors.rc[2]).toBeGreaterThanOrEqual(128);
+                    expect(sampleColors.bc[0]).toBeLessThan(128);
+                    expect(sampleColors.bc[1]).toBeLessThan(128);
+                    expect(sampleColors.bc[2]).toBeGreaterThanOrEqual(128);
+                    break;
+            }
+        }
+
+        expect.assertions(4 * 2 * 5 * 3) // 4 xylograph * 2 canvas * 5 samplePixel * 3 channel
+
+        const canvas1Name = "canvas1";
+        const canvas2Name = "canvas2";
+        const canvas1InnerColor = "#FF0000";
+        const canvas1OuterColor = "#00FF00";
+        const canvas2InnerColor = "#0000FF";
+        const canvas2OuterColor = "#FF0000";
+
+        const xg1 = createXylograph();
+        const xg2 = createXylograph();
+        const xg3 = createXylograph();
+        const xg4 = createXylograph();
+
+        fillCanvas(xg1.addCanvas(canvas1Name), canvas1InnerColor, canvas1OuterColor);
+        fillCanvas(xg2.addCanvas(canvas1Name), canvas1InnerColor, canvas1OuterColor);
+        fillCanvas(xg3.addCanvas(canvas1Name), canvas1InnerColor, canvas1OuterColor);
+        fillCanvas(xg4.addCanvas(canvas1Name), canvas1InnerColor, canvas1OuterColor);
+        fillCanvas(xg1.addCanvas(canvas2Name), canvas2InnerColor, canvas2OuterColor);
+        fillCanvas(xg2.addCanvas(canvas2Name), canvas2InnerColor, canvas2OuterColor);
+        fillCanvas(xg3.addCanvas(canvas2Name), canvas2InnerColor, canvas2OuterColor);
+        fillCanvas(xg4.addCanvas(canvas2Name), canvas2InnerColor, canvas2OuterColor);
+
+        xg1.resize(5, 5);
+        xg2.resize(5, 5, 2, 2, 6, 6);
+        xg3.resize(20, 20);
+        xg4.resize(20, 20, 2, 2, 6, 6);
+
+        colorCheck(xg1.getCanvas(canvas1Name) as Canvas<NodeCanvas.Canvas>, "r", "g");
+        colorCheck(xg1.getCanvas(canvas2Name) as Canvas<NodeCanvas.Canvas>, "b", "r");
+        colorCheck(xg2.getCanvas(canvas1Name) as Canvas<NodeCanvas.Canvas>, "r", "r");
+        colorCheck(xg2.getCanvas(canvas2Name) as Canvas<NodeCanvas.Canvas>, "b", "b");
+        colorCheck(xg3.getCanvas(canvas1Name) as Canvas<NodeCanvas.Canvas>, "r", "g");
+        colorCheck(xg3.getCanvas(canvas2Name) as Canvas<NodeCanvas.Canvas>, "b", "r");
+        colorCheck(xg4.getCanvas(canvas1Name) as Canvas<NodeCanvas.Canvas>, "r", "r");
+        colorCheck(xg4.getCanvas(canvas2Name) as Canvas<NodeCanvas.Canvas>, "b", "b");
+    });
+
     test.todo("createOutputStream()");
     test.todo("toDataURL()");
     test.todo("toBlob()");
