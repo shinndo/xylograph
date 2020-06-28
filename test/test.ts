@@ -772,8 +772,53 @@ describe("Xylograph", () => {
         colorCheck(xg4.getCanvas(canvas2Name) as Canvas<NodeCanvas.Canvas>, "b", "b");
     });
 
+    test("toDataURL()", () => {
+        expect.assertions(1);
+
+        function createXylograph() {
+            return new Xylograph<NodeCanvas.Canvas>({
+                createCanvasFunction: NodeCanvas.createCanvas,
+                createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                    const img = new NodeCanvas.Image();
+                    img.src = canvas.toBuffer("image/png");
+                    return img;
+                },
+                canvasWidth: 10,
+                canvasHeight: 10
+            });
+        }
+
+        const canvasName = "canvas";
+
+        const xg1 = createXylograph();
+
+        const ctx1 = xg1.addCanvas(canvasName).getContext("2d");
+        ctx1.fillStyle = "#808080";
+        ctx1.fillRect(0, 0, 10, 10);
+
+        const ctx2 = xg1.addCanvas(canvasName).getContext("2d");
+        ctx2.fillStyle = "#FF0000"
+        ctx2.fillRect(0, 0, 5, 10);
+
+        const ctx3 = xg1.addCanvas(canvasName).getContext("2d");
+        ctx3.fillStyle = "#0000FF";
+        ctx3.fillRect(0, 5, 10, 5);
+
+        const xg2 = createXylograph();
+
+        const expectCanvas = xg2.addCanvas(canvasName);
+        const expectCtx = expectCanvas.getContext("2d");
+        expectCtx.fillStyle = "#808080";
+        expectCtx.fillRect(0, 0, 10, 10);
+        expectCtx.fillStyle = "#FF0000"
+        expectCtx.fillRect(0, 0, 5, 10);
+        expectCtx.fillStyle = "#0000FF";
+        expectCtx.fillRect(0, 5, 10, 5);
+
+        expect(xg1.toDataURL()).toEqual(expectCanvas.toDataURL());
+    });
+
     test.todo("createOutputStream()");
-    test.todo("toDataURL()");
     test.todo("toBlob()");
 });
 

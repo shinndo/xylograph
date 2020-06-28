@@ -1,5 +1,6 @@
 // Canvas
 type GetContextFunction = (type: "2d") => any;
+type ToDataURLFunction = () => string;
 export interface CanvasProperty {
     name: string;
     compositeOperation: string;
@@ -9,7 +10,8 @@ interface XylographCanvas {
     xylograph: CanvasProperty;
     readonly width: number;
     readonly height: number;
-    getContext: GetContextFunction
+    getContext: GetContextFunction,
+    toDataURL: ToDataURLFunction
 }
 export type Canvas<T> = T & XylographCanvas; // Prioritize T
 export type CanvasArray<T> = Canvas<T>[];
@@ -215,6 +217,13 @@ export class Xylograph<T> {
 
         this.canvasWidth = width;
         this.canvasHeight = height;
+    }
+
+    public toDataURL(): string {
+        const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
+        this._setDefaultCanvasProperty(baseCanvas, "");
+        this._margeCanvases(baseCanvas, this.canvases);
+        return baseCanvas.toDataURL();
     }
 
     private _insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
