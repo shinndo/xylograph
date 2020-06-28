@@ -1,5 +1,6 @@
 // Canvas
 type GetContextFunction = (type: "2d") => any;
+type ToDataURLFunction = () => string;
 export interface CanvasProperty {
     name: string;
     compositeOperation: string;
@@ -9,7 +10,8 @@ interface XylographCanvas {
     xylograph: CanvasProperty;
     readonly width: number;
     readonly height: number;
-    getContext: GetContextFunction
+    getContext: GetContextFunction,
+    toDataURL: ToDataURLFunction
 }
 export type Canvas<T> = T & XylographCanvas; // Prioritize T
 export type CanvasArray<T> = Canvas<T>[];
@@ -167,17 +169,18 @@ export class Xylograph<T> {
             }
         }
 
+        const baseCanvas = this.getCanvas(margeTargetCanvasNames[0]) as Canvas<T>;
         const margeCanvases: CanvasArray<T> = [];
-        for(let i = 0; i < margeTargetCanvasNames.length; i++) {
+        for(let i = 1; i < margeTargetCanvasNames.length; i++) {
             margeCanvases.push(this.getCanvas(margeTargetCanvasNames[i]) as Canvas<T>);
         }
 
-        this._margeCanvases(margeCanvases, forceCompositeOperation);
+        this._margeCanvases(baseCanvas, margeCanvases, forceCompositeOperation);
 
         this.canvases = newCanvases;
         this.canvasIndexes = newCanvasIndexes;
 
-        return margeCanvases[0];
+        return baseCanvas;
     }
 
     public getCanvases(): CanvasArray<T> {
@@ -214,6 +217,13 @@ export class Xylograph<T> {
 
         this.canvasWidth = width;
         this.canvasHeight = height;
+    }
+
+    public toDataURL(): string {
+        const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
+        this._setDefaultCanvasProperty(baseCanvas, "");
+        this._margeCanvases(baseCanvas, this.canvases);
+        return baseCanvas.toDataURL();
     }
 
     private _insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
@@ -321,11 +331,10 @@ export class Xylograph<T> {
         return newCanvases;
     }
 
-    private _margeCanvases(canvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
-        const baseCanvas = canvases[0];
+    private _margeCanvases(baseCanvas: Canvas<T>, margeCanvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
         const baseCtx = baseCanvas.getContext("2d");
-        for(let i = 1; i < canvases.length; i++) {
-            const canvas = canvases[i];
+        for(let i = 0; i < margeCanvases.length; i++) {
+            const canvas = margeCanvases[i];
             if(canvas.xylograph.hidden) continue;
             baseCtx.globalCompositeOperation = (forceCompositeOperation)? forceCompositeOperation : canvas.xylograph.compositeOperation;
             baseCtx.drawImage(this._createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
