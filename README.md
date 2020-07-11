@@ -10,9 +10,7 @@ The npm module is in preparation.
 
 ## Documentation
 
-### Xylograph
-
-#### Xylograph.addCanvas(canvasName)
+### Xylograph.addCanvas(canvasName)
 
 Create a canvas and add it to Xylograph object. Return of created canvas object.
 
@@ -22,7 +20,7 @@ xylograph.addCanvas(canvasName: string) => Canvas
 
 * `canvasName`: New canvas name. If specified canvas name does existed in xylograph, add number to tail of canvas name (e.g.: `NewCanvas[1]`, `NewCanvas[2]`).
 
-#### Xylograph.getCanvas(canvasName)
+### Xylograph.getCanvas(canvasName)
 
 Get canvas object of specified canvas name from xylograph. If specified canvas name does not exist, return of `undefined`.
 
@@ -32,7 +30,7 @@ xylograph.getCanvas(canvasName: string) => Canvas | undefined
 
 * `canvasName`: Target canvas name.
 
-#### Xylograph.removeCanvas(canvasName)
+### Xylograph.removeCanvas(canvasName)
 
 Remove canvas of specified canvas name from xylograph.
 
@@ -42,7 +40,7 @@ xylograph.removeCanvas(canvasName: string) => void
 
 * `canvasName`: Target canvas name.
 
-#### Xylograph.renameCanvas(targetCanvasName, newCanvasName)
+### Xylograph.renameCanvas(targetCanvasName, newCanvasName)
 
 Rename the canvas of the specified canvas name. Return of renamed canvas name. 
 
@@ -55,7 +53,7 @@ xylograph.renameCanvas(targetCanvasName: string, newCanvasName: string) => strin
 * `targetCanvasName`: Target canvas name.
 * `newCanvasName`: New canvas name.
 
-#### Xylograph.moveCanvas(canvasNames)
+### Xylograph.moveCanvas(canvasNames)
 
 Change the order of the canvases by specifying the canvas name. If not specified all canvas name, unspecified canvas does remove.
 
@@ -65,7 +63,7 @@ xylograph.moveCanvas(canvasNames: string[]) => void
 
 * `canvasNames`: An array of canvas names of specified order.
 
-#### Xylograph.duplicateCanvas(originCanvasName, duplicateCanvasName)
+### Xylograph.duplicateCanvas(originCanvasName, duplicateCanvasName)
 
 Duplicate the canvas with the specified name. Return of duplicated canvas.
 
@@ -78,7 +76,7 @@ xylograph.duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string
 * `originCanvasName`: The name of the origin canvas.
 * `duplicateCanvasName`: The name of the duplicated canvas. Not required.
 
-#### Xylograph.mergeCanvas(mergeCanvasNames, forceCompositeOperation)
+### Xylograph.mergeCanvas(mergeCanvasNames, forceCompositeOperation)
 
 Merge all the specified canvases into the first one among the specified canvases. After merging, remove all canvases other than the first one. Return of merged canvas.
 
@@ -91,7 +89,7 @@ xylograph.mergeCanvas(mergeCanvasNames: string[], forceCompositeOperation?: stri
 * `mergeCanvasNames`: The name of specified canvases.
 * `forceCompositeOperation`: Force composite operation. If specified `forceCompositeOperation`, use `forceCompositeOperation` value instead of `compositeOperation` property of canvas. Not required.
 
-#### Xylograph.getCanvases()
+### Xylograph.getCanvases()
 
 Get all the canvases in xylograph. Return the canvas array. 
 
@@ -99,7 +97,7 @@ Get all the canvases in xylograph. Return the canvas array.
 xylograph.getCanvases() => Canvas[]
 ```
 
-#### Xylograph.setCanvases(canvases)
+### Xylograph.setCanvases(canvases)
 
 Replace canvases of xylograph.
 
@@ -109,7 +107,7 @@ xylograph.setCanvases(canvases: Canvas[]) => void
 
 * `canvases`: The canvas array to replace.
 
-#### Xylograph.getCanvasNames()
+### Xylograph.getCanvasNames()
 
 Get all canvas names in xylograph. Return the string array.
 
@@ -117,7 +115,7 @@ Get all canvas names in xylograph. Return the string array.
 xylograph.getCanvasNames() => string[]
 ```
 
-#### Xylograph.resize(width, height, sx, sy, sw, sh)
+### Xylograph.resize(width, height, sx, sy, sw, sh)
 
 Resize all canvases in xylograph.
 
@@ -132,7 +130,7 @@ xylograph.resize(width: number, height: number, sx?: number, sy?: number, sw?: n
 * `sw`: Clipping width. Not required.
 * `sh`: Clipping height. Not required.
 
-#### Xylograph.toDataURL()
+### Xylograph.toDataURL()
 
 Get data URL merging all canvases in xylograph.
 
@@ -140,9 +138,7 @@ Get data URL merging all canvases in xylograph.
 xylograph.toDataURL() => string
 ```
 
-### Canvas
-
-#### Canvas.xylograph
+### Canvas.xylograph
 
 Additional property of Canvas object.
 
