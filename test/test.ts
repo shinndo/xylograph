@@ -398,7 +398,7 @@ describe("Xylograph", () => {
         expect(shallowDuplicateCanvas.xylograph.name).toEqual(shallowChangeName);
     });
 
-    test("margeCanvas(canvasNames[], forceCompositeOperation?)", () => {
+    test("mergeCanvas(canvasNames[], forceCompositeOperation?)", () => {
         const xg = new Xylograph<NodeCanvas.Canvas>({
             createCanvasFunction: NodeCanvas.createCanvas,
             createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
@@ -419,12 +419,12 @@ describe("Xylograph", () => {
         const hiddenCanvasName2 = "hidden2";
         const multiCanvasName1 = "multi1";
         const multiCanvasName2 = "multi2";
-        const notMargeCanvasName1 = "not-marge1";
+        const notMergeCanvasName1 = "not-merge1";
         const normal2CanvasName1 = "normal2-1";
         const normal2CanvasName2 = "normal2-2";
         const screenCanvasName1 = "screen1";
         const screenCanvasName2 = "screen2";
-        const notMargeCanvasName2 = "not-marge2";
+        const notMergeCanvasName2 = "not-merge2";
 
         // bg canvas
         const bgCanvas = xg.addCanvas(bgCanvasName1);
@@ -459,12 +459,12 @@ describe("Xylograph", () => {
         multiCtx.fillRect(0, 1, 5, 1);
         xg.duplicateCanvas(multiCanvasName1, multiCanvasName2);
 
-        // not-marge1 canvas
-        const notMarge1Canvas = xg.addCanvas(notMargeCanvasName1);
-        notMarge1Canvas.xylograph.compositeOperation = "source-over";
-        const notMarge1Ctx = notMarge1Canvas.getContext("2d");
-        notMarge1Ctx.fillStyle = "#FFFFFF";
-        notMarge1Ctx.fillRect(0, 0, 5, 5);
+        // not-merge1 canvas
+        const notMerge1Canvas = xg.addCanvas(notMergeCanvasName1);
+        notMerge1Canvas.xylograph.compositeOperation = "source-over";
+        const notMerge1Ctx = notMerge1Canvas.getContext("2d");
+        notMerge1Ctx.fillStyle = "#FFFFFF";
+        notMerge1Ctx.fillRect(0, 0, 5, 5);
 
         // normal2 canvas
         const normal2Canvas = xg.addCanvas(normal2CanvasName1);
@@ -482,34 +482,34 @@ describe("Xylograph", () => {
         screenCtx.fillRect(0, 3, 5, 1);
         xg.duplicateCanvas(screenCanvasName1, screenCanvasName2);
 
-        // not-marge2 canvas
-        const notMarge2Canvas = xg.addCanvas(notMargeCanvasName2);
-        notMarge2Canvas.xylograph.compositeOperation = "source-over";
-        const notMarge2Ctx = notMarge2Canvas.getContext("2d");
-        notMarge2Ctx.fillStyle = "#FFFFFF";
-        notMarge2Ctx.fillRect(0, 0, 5, 5);
+        // not-merge2 canvas
+        const notMerge2Canvas = xg.addCanvas(notMergeCanvasName2);
+        notMerge2Canvas.xylograph.compositeOperation = "source-over";
+        const notMerge2Ctx = notMerge2Canvas.getContext("2d");
+        notMerge2Ctx.fillStyle = "#FFFFFF";
+        notMerge2Ctx.fillRect(0, 0, 5, 5);
 
-        // marge 1
-        const margedCanvas1 = xg.margeCanvas([bgCanvasName1, normal1CanvasName1, hiddenCanvasName1, multiCanvasName1, normal2CanvasName1, notExistName, screenCanvasName1]) as Canvas<NodeCanvas.Canvas>;
-        expect(Array.from(margedCanvas1.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
+        // merge 1
+        const mergedCanvas1 = xg.mergeCanvas([bgCanvasName1, normal1CanvasName1, hiddenCanvasName1, multiCanvasName1, normal2CanvasName1, notExistName, screenCanvasName1]) as Canvas<NodeCanvas.Canvas>;
+        expect(Array.from(mergedCanvas1.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
             255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
               0,   0,   0, 255,   0,   0, 128, 255,   0,   0, 128, 255,   0, 255,   0, 255,   0,   0, 128, 255,
             255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
             255, 255,   0, 255, 255, 255, 128, 255, 255, 255, 128, 255, 255, 255,   0, 255, 255, 255, 128, 255,
             255,   0,   0, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255
         ]);
-        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, bgCanvasName2, normal1CanvasName2, hiddenCanvasName2, multiCanvasName2, notMargeCanvasName1, normal2CanvasName2, screenCanvasName2, notMargeCanvasName2]);
+        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, bgCanvasName2, normal1CanvasName2, hiddenCanvasName2, multiCanvasName2, notMergeCanvasName1, normal2CanvasName2, screenCanvasName2, notMergeCanvasName2]);
 
-        // marge 2
-        const margedCanvas2 = xg.margeCanvas([normal1CanvasName2, bgCanvasName2, hiddenCanvasName2, normal2CanvasName2, notExistName, screenCanvasName2, multiCanvasName2], "source-over") as Canvas<NodeCanvas.Canvas>;
-        expect(Array.from(margedCanvas2.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
+        // merge 2
+        const mergedCanvas2 = xg.mergeCanvas([normal1CanvasName2, bgCanvasName2, hiddenCanvasName2, normal2CanvasName2, notExistName, screenCanvasName2, multiCanvasName2], "source-over") as Canvas<NodeCanvas.Canvas>;
+        expect(Array.from(mergedCanvas2.getContext("2d").getImageData(0, 0, 5, 5).data)).toEqual([
             128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
               0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,
             128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255,
             255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255, 255, 255,   0, 255,
             128, 128, 128, 255, 128, 128, 128, 255, 128, 128, 128, 255,   0, 255,   0, 255, 128, 128, 128, 255
         ]);
-        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, normal1CanvasName2, notMargeCanvasName1, notMargeCanvasName2]);
+        expect(xg.getCanvasNames()).toEqual([bgCanvasName1, normal1CanvasName2, notMergeCanvasName1, notMergeCanvasName2]);
     });
 
     test("getCanvases()", () => {

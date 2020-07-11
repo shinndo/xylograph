@@ -145,14 +145,14 @@ export class Xylograph<T> {
         return newCanvas;
     }
 
-    public margeCanvas(margeCanvasNames: string[], forceCompositeOperation?: string): Canvas<T> | undefined {
-        if(!Array.isArray(margeCanvasNames)) return;
+    public mergeCanvas(mergeCanvasNames: string[], forceCompositeOperation?: string): Canvas<T> | undefined {
+        if(!Array.isArray(mergeCanvasNames)) return;
 
-        const margeTargetCanvasNames: string[] = [];
+        const mergeTargetCanvasNames: string[] = [];
         const canvasNames = this.getCanvasNames();
-        for(let i = 0; i < margeCanvasNames.length; i++) {
-            const margeCanvasName = margeCanvasNames[i];
-            if(canvasNames.includes(margeCanvasName)) margeTargetCanvasNames.push(margeCanvasName);
+        for(let i = 0; i < mergeCanvasNames.length; i++) {
+            const mergeCanvasName = mergeCanvasNames[i];
+            if(canvasNames.includes(mergeCanvasName)) mergeTargetCanvasNames.push(mergeCanvasName);
         }
 
         const newCanvases: CanvasArray<T> = [];
@@ -162,20 +162,20 @@ export class Xylograph<T> {
         for(let i = 0, newIndex = 0; i < this.canvases.length; i++) {
             const canvas = this.canvases[i];
             const canvasName = this._getCanvasNameFromProperty(canvas);
-            if(!margeTargetCanvasNames.includes(canvasName) || margeTargetCanvasNames[0] === canvasName) {
+            if(!mergeTargetCanvasNames.includes(canvasName) || mergeTargetCanvasNames[0] === canvasName) {
                 newCanvases.push(canvas);
                 newCanvasIndexes[canvasName] = newIndex;
                 newIndex++;
             }
         }
 
-        const baseCanvas = this.getCanvas(margeTargetCanvasNames[0]) as Canvas<T>;
-        const margeCanvases: CanvasArray<T> = [];
-        for(let i = 1; i < margeTargetCanvasNames.length; i++) {
-            margeCanvases.push(this.getCanvas(margeTargetCanvasNames[i]) as Canvas<T>);
+        const baseCanvas = this.getCanvas(mergeTargetCanvasNames[0]) as Canvas<T>;
+        const mergeCanvases: CanvasArray<T> = [];
+        for(let i = 1; i < mergeTargetCanvasNames.length; i++) {
+            mergeCanvases.push(this.getCanvas(mergeTargetCanvasNames[i]) as Canvas<T>);
         }
 
-        this._margeCanvases(baseCanvas, margeCanvases, forceCompositeOperation);
+        this._mergeCanvases(baseCanvas, mergeCanvases, forceCompositeOperation);
 
         this.canvases = newCanvases;
         this.canvasIndexes = newCanvasIndexes;
@@ -222,7 +222,7 @@ export class Xylograph<T> {
     public toDataURL(): string {
         const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
         this._setDefaultCanvasProperty(baseCanvas, "");
-        this._margeCanvases(baseCanvas, this.canvases);
+        this._mergeCanvases(baseCanvas, this.canvases);
         return baseCanvas.toDataURL();
     }
 
@@ -331,10 +331,10 @@ export class Xylograph<T> {
         return newCanvases;
     }
 
-    private _margeCanvases(baseCanvas: Canvas<T>, margeCanvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
+    private _mergeCanvases(baseCanvas: Canvas<T>, mergeCanvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
         const baseCtx = baseCanvas.getContext("2d");
-        for(let i = 0; i < margeCanvases.length; i++) {
-            const canvas = margeCanvases[i];
+        for(let i = 0; i < mergeCanvases.length; i++) {
+            const canvas = mergeCanvases[i];
             if(canvas.xylograph.hidden) continue;
             baseCtx.globalCompositeOperation = (forceCompositeOperation)? forceCompositeOperation : canvas.xylograph.compositeOperation;
             baseCtx.drawImage(this._createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
