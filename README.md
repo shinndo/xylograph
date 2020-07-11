@@ -1,3 +1,5 @@
+![Xylograph](./examples/xylograph.svg)
+
 # xylograph
 
 Xylograph is multi canvas management library for Canvas API compatible interface.
