@@ -26,7 +26,6 @@ export type xylographOption<T> = {
     createImageFunction: CreateImageFunction<T>;
     canvasWidth?: number;
     canvasHeight?: number;
-    copyCanvasFunction?: CopyCanvasFunction<T>;
 };
 
 // Class
@@ -50,11 +49,7 @@ export class Xylograph<T> {
         }
         this._createCanvas = opt.createCanvasFunction;
 
-        // Set copyCanvas function
-        if(opt.copyCanvasFunction) {
-            this._copyCanvas = opt.copyCanvasFunction;
-        }
-
+        // Set createImage function
         if(!opt.createImageFunction) {
             throw new Error("createCanvas function is undefined.");
         }
@@ -342,18 +337,5 @@ export class Xylograph<T> {
 
         baseCtx.globalCompositeOperation = baseCanvas.xylograph.compositeOperation;
         return baseCanvas;
-    }
-
-    static createHTMLCanvas(width: number, height: number): HTMLCanvasElement {
-        const canvas: HTMLCanvasElement = window.document.createElement("canvas");
-        canvas.setAttribute("width", width.toString());
-        canvas.setAttribute("height", height.toString());
-        return canvas;
-    }
-
-    static createHTMLImage(canvas: Canvas<HTMLCanvasElement>): HTMLImageElement {
-        const image = window.document.createElement("img");
-        image.src = canvas.toDataURL("image/png");
-        return image;
     }
 }

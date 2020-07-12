@@ -1,6 +1,6 @@
 {
   "name": "xylograph",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Xylograph is multi canvas management library of wrapping Canvas API compatible library.",
   "main": "dist/index.js",
   "scripts": {
