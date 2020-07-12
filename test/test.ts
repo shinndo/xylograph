@@ -312,7 +312,7 @@ describe("Xylograph", () => {
 
     
     test("duplicateCanvas(targetCanvasName, duplicateCanvasName?)", () => {
-        expect.assertions(14);
+        expect.assertions(11);
         const canvasWidth = 10;
         const canvasHeight = 10;
         const xg1 = new Xylograph<NodeCanvas.Canvas>({
@@ -372,30 +372,6 @@ describe("Xylograph", () => {
 
         // Specified originCanvas is not exist
         expect(xg1.duplicateCanvas("noname")).toBeUndefined();
-        
-        // Specified copyCanvasFunction
-        let copyFunctionRunned = false;
-        const shallowChangeName = "shallow";
-        const xg2 = new Xylograph<NodeCanvas.Canvas>({
-            createCanvasFunction: NodeCanvas.createCanvas,
-            createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
-                const img = new NodeCanvas.Image();
-                img.src = canvas.toBuffer("image/png");
-                return img;
-            },
-            copyCanvasFunction: (originCanvas: Canvas<NodeCanvas.Canvas>) => {
-                copyFunctionRunned = true;
-                return originCanvas;
-            },
-            canvasWidth: 1,
-            canvasHeight: 1
-        });
-        const shallowOriginCanvas = xg2.addCanvas(originCanvasName);
-        const shallowDuplicateCanvas = xg2.duplicateCanvas(originCanvasName, duplicateCanvasName) as Canvas<NodeCanvas.Canvas>;
-        expect(copyFunctionRunned).toEqual(true);
-        expect(shallowDuplicateCanvas.xylograph.name).toEqual(duplicateCanvasName);
-        shallowOriginCanvas.xylograph.name = shallowChangeName;
-        expect(shallowDuplicateCanvas.xylograph.name).toEqual(shallowChangeName);
     });
 
     test("mergeCanvas(canvasNames[], forceCompositeOperation?)", () => {
