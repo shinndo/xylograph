@@ -10,6 +10,47 @@ The npm module is in preparation.
 
 ## Example
 
+If use [node-canvas](https://github.com/Automattic/node-canvas) library:
+```ts
+import * as NodeCanvas from "canvas";
+import {Xylograph, Canvas} from "xylograph";
+
+const width = 800;
+const height = 600;
+
+// Create Xylograph
+const xg = new Xylograph<NodeCanvas.Canvas>({
+  // Create canvas function
+  createCanvasFunction: (w: number, h: number) => NodeCanvas.createCanvas(w, h),
+  // Create image function
+  createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+    const img = new NodeCanvas.Image();
+    img.src = canvas.toBuffer("image/png");
+    return img;
+  },
+  canvasWidth: width,
+  canvasHeight: height
+});
+
+// Add background canvas
+const bg = xg.addCanvas("background");
+const bgCtx = bg.getContext("2d");
+bgCtx.fillStyle = "#333333";
+bgCtx.fillRect(0, 0, width, height);
+
+// Add text canvas
+const text = xg.addCanvas("text");
+const textCtx = text.getContext("2d");
+textCtx.fillStyle = "#ffffff";
+textCtx.textAlign = "center";
+textCtx.textBaseline = "middle";
+textCtx.font = "bold 80px sans-serif;"
+textCtx.fillText("Xylograph", width / 2, height / 2);
+
+// Get DataURL of merged canvases
+console.log(xg.toDataURL()); // => data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAA...
+```
+
 ## Documentation
 
 ### Xylograph.addCanvas(canvasName)
