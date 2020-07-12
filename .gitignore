@@ -7,3 +7,6 @@
 # Examples
 /examples/output
 /examples/output.*
+
+# VSCode project
+/.vscode

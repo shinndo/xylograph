@@ -2,7 +2,7 @@
 
 # xylograph
 
-Xylograph is multi canvas management library for Canvas API compatible interface.
+Xylograph is multi canvas management library of wrapping Canvas API compatible library.
 
 ## Installation
 

@@ -1,11 +1,11 @@
 {
   "name": "xylograph",
-  "version": "0.7.1",
-  "description": "",
+  "version": "0.7.2",
+  "description": "Xylograph is multi canvas management library of wrapping Canvas API compatible library.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p .",
-    "example": "tsc -p examples/tsconfig.json && node examples/output/index.js",
+    "examples": "tsc -p examples/tsconfig.json && node examples/output/examples/src/index.js",
     "test": "npx jest",
     "test-watch": "npx jest --watch"
   },
@@ -23,8 +23,10 @@
     "canvas": "^2.6.1"
   },
   "devDependencies": {
+    "@types/app-root-path": "^1.2.4",
     "@types/jest": "^25.2.3",
     "@types/node": "^14.0.13",
+    "app-root-path": "^3.0.0",
     "jest": "^26.0.1",
     "ts-jest": "^26.1.0",
     "typescript": "^3.9.5"

@@ -1,42 +1,68 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as appRoot from 'app-root-path';
-import * as Canvas from 'canvas';
-import { Xylograph, CreateCanvasFunction } from '../../src/index';
+import * as root from 'app-root-path';
+import * as NodeCanvas from "canvas";
+import {Xylograph, Canvas} from '../../src/index';
 
+async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
+    return new Promise((resolve, rejects) => {
+        fs.readFile(filepath, (err, data) => {
+            if(err) rejects(err);
+            const img = new NodeCanvas.Image();
+            img.onload = () => resolve(img);
+            img.onerror = (err) => rejects(err);
+            img.src = data;
+        });
+    });
+}
 
-// Create Xylograph
-const xg = new Xylograph<Canvas.Canvas>({
-    createCanvasFunction: Canvas.createCanvas,
-});
+(async function main() {
+    const width = 800;
+    const height = 600;
+    const frameWidth = 40;
 
-// EventListner
-xg.on('addCanvas', (canvas) => {
-    console.log("Add canvas");
-});
-// xg.on('change', (canvas, ctx) => {
-//     if(!canvas.isChanged()) return;
-// });
-// xg.canvas.on('change', (canvas, ctx) => {});
-// xg.canvas.context.on('change', (canvas, ctx) => {});
+    // Create Xylograph
+    const xg = new Xylograph<NodeCanvas.Canvas>({
+        createCanvasFunction: NodeCanvas.createCanvas,
+        createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            const img = new NodeCanvas.Image();
+            img.src = canvas.toBuffer("image/png");
+            return img;
+        },
+        canvasWidth: width,
+        canvasHeight: height
+    });
 
-// // New Layer
-xg.addCanvas("background");
-// xg.addImage(stream, w, h, x, y, dx, dw,);
+    const base = xg.addCanvas("background"); // base canvas
+    const main = xg.addCanvas("main");
+    const frame = xg.addCanvas("frame");
+    const author = xg.addCanvas("author");
 
+    const baseCtx = base.getContext("2d");
+    baseCtx.fillStyle = "#1e1e1e";
+    baseCtx.fillRect(0, 0, width, height);
 
-// xg.getCanvas(0);
-// xg.getCanvas('background');
-// xg.getContext(0);
-// xg.getContext('background');
+    const inputPath = root + path.sep + "examples" + path.sep + "xylograph.png";
+    const img = await loadLocalImage(inputPath);
+    const mainCtx = main.getContext("2d");
+    mainCtx.drawImage(img, (width / 2) - (img.width / 2), (height / 2) - (img.height / 2));
 
-// xg.ctx[0].fillRect(); // call 'change' event.
-// xg.getContext(0).fillRect();
-// // Run script to context
-// xg.ctx[0].run((ctx) => {
+    const frameCtx = frame.getContext("2d");
+    frameCtx.fillStyle = "#ffffff";
+    frameCtx.fillRect(0, 0, width, height);
+    frameCtx.clearRect(frameWidth, frameWidth, width - frameWidth * 2, height - frameWidth * 2);
 
-// });
-// xg.canvas[0].run((canvas, ctx) => {
+    const authorName = "@shinndo";
+    const authorCtx = author.getContext("2d");
+    authorCtx.fillStyle = "#1e1e1e";
+    authorCtx.textAlign = "end";
+    authorCtx.textBaseline = "middle";
+    authorCtx.font = "bold " + Math.floor(frameWidth/2) + "px sans-serif;"
+    authorCtx.fillText(authorName, width - frameWidth, height - frameWidth / 2);
 
-// });
- 
+    xg.mergeCanvas(xg.getCanvasNames()); // Merge to base canvas
+
+    const outputPath = root + path.sep + "examples" + path.sep + "output.png";
+    fs.writeFileSync(outputPath, base.toBuffer("image/png"));
+    console.log("Output completed: " + outputPath);
+})();
