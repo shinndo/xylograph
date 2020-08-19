@@ -13,54 +13,59 @@ interface XylographCanvas {
     getContext: GetContextFunction,
     toDataURL: ToDataURLFunction
 }
-export type Canvas<T> = T & XylographCanvas; // Prioritize T
+export type Canvas<T> = T & XylographCanvas;
 export type CanvasArray<T> = Canvas<T>[];
-export type CanvasIndexMap = {[canvasName: string]: number};
+type CanvasIndexMap = {[canvasName: string]: number};
+
+// Xylograph function type
+interface DefaultXylographFunctionTypes {
+    createCanvas: (w: number, h: number) => any;
+    createImageFromCanvas: (canvas: any) => any;
+    createBinaryFromCanvas: (canvas: any) => any;
+}
 
 // Xylograph option
-export type CreateCanvasFunction<T> = (width: number, height: number) => T;
-export type CopyCanvasFunction<T> = (originCanvas: Canvas<T>) => Canvas<T>;
-export type CreateImageFunction<T> = (canvas: Canvas<T>) => any;
-export type xylographOption<T> = {
-    createCanvasFunction: CreateCanvasFunction<T>;
-    createImageFunction: CreateImageFunction<T>;
+export type xylographOption<FunctionType extends DefaultXylographFunctionTypes = DefaultXylographFunctionTypes> = {
+    createCanvas: FunctionType['createCanvas'];
+    createImageFromCanvas: FunctionType['createImageFromCanvas'];
+    createBinaryFromCanvas: FunctionType['createBinaryFromCanvas'];
     canvasWidth?: number;
     canvasHeight?: number;
 };
 
-// Class
-export class Xylograph<T> {
-    private _createCanvas: CreateCanvasFunction<T>;
-    private _createImage: CreateImageFunction<T>;
+// Xylograph Class
+export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunctionTypes = DefaultXylographFunctionTypes> {
+    private _createCanvas: FunctionType['createCanvas'];
+    private _createImage: FunctionType['createImageFromCanvas'];
     private canvasWidth: number;
     private canvasHeight: number;
-    private canvases: CanvasArray<T>;
+    private canvases: CanvasArray<CanvasType>;
     private canvasIndexes: CanvasIndexMap;
 
-    constructor(opt: xylographOption<T>) {
+    constructor(opt: xylographOption<FunctionType>) {
 
         // Set canvas size
         this.canvasWidth = (opt.canvasWidth)? opt.canvasWidth : 200;
         this.canvasHeight = (opt.canvasHeight)? opt.canvasHeight : 200;
 
         // Set createCanvas function
-        if(!opt.createCanvasFunction) {
+        if(!opt.createCanvas) {
             throw new Error("createCanvas function is undefined.");
         }
-        this._createCanvas = opt.createCanvasFunction;
+        this._createCanvas = opt.createCanvas;
 
         // Set createImage function
-        if(!opt.createImageFunction) {
+        if(!opt.createImageFromCanvas) {
             throw new Error("createCanvas function is undefined.");
         }
-        this._createImage = opt.createImageFunction;
+        this._createImage = opt.createImageFromCanvas;
 
         // Init canvas array
         this.canvases = [];
         this.canvasIndexes = Object.create(null);
     }
 
-    public addCanvas(canvasName: string, afterOf?: number | string, canvas?: Canvas<T>): Canvas<T> {
+    public addCanvas(canvasName: string, afterOf?: number | string, canvas?: Canvas<CanvasType>): Canvas<CanvasType> {
         if(typeof canvasName !== "string") {
             canvasName = "unnamed";
         }
@@ -69,7 +74,7 @@ export class Xylograph<T> {
         canvasName = this._getAvailableCanvasName(canvasName);
 
         if(!canvas) {
-            canvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
+            canvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<CanvasType>;
             this._setDefaultCanvasProperty(canvas, canvasName);
         } else {
             this._setCanvasNameToProperty(canvas, canvasName);
@@ -80,7 +85,7 @@ export class Xylograph<T> {
         return canvas; 
     }
 
-    public getCanvas(canvasName: string): Canvas<T> | undefined {
+    public getCanvas(canvasName: string): Canvas<CanvasType> | undefined {
         return this.canvases[this.canvasIndexes[canvasName]];
     }
 
@@ -106,7 +111,7 @@ export class Xylograph<T> {
         // Rename
         this.canvasIndexes[newCanvasName] = this.canvasIndexes[targetCanvasName];
         delete this.canvasIndexes[targetCanvasName];
-        const canvas = this.getCanvas(newCanvasName) as Canvas<T>;
+        const canvas = this.getCanvas(newCanvasName) as Canvas<CanvasType>;
         this._setCanvasNameToProperty(canvas, newCanvasName);
 
         return newCanvasName;
@@ -115,7 +120,7 @@ export class Xylograph<T> {
     public moveCanvas(canvasNames: string[]): void {
         if(!Array.isArray(canvasNames)) return;
         
-        const newCanvases: CanvasArray<T> = [];
+        const newCanvases: CanvasArray<CanvasType> = [];
         for(let i = 0; i < canvasNames.length; i++) {
             const canvasName = canvasNames[i];
             const canvas = this.getCanvas(canvasName);
@@ -127,7 +132,7 @@ export class Xylograph<T> {
         this._replaceCanvases(newCanvases);
     }
 
-    public duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string): Canvas<T> | undefined {
+    public duplicateCanvas(originCanvasName: string, duplicateCanvasName?: string): Canvas<CanvasType> | undefined {
         if(typeof originCanvasName !== "string") return;
         duplicateCanvasName = (typeof duplicateCanvasName === "string")? this._getAvailableCanvasName(duplicateCanvasName) : this._getAvailableCanvasName(originCanvasName);
 
@@ -140,7 +145,7 @@ export class Xylograph<T> {
         return newCanvas;
     }
 
-    public mergeCanvas(mergeCanvasNames: string[], forceCompositeOperation?: string): Canvas<T> | undefined {
+    public mergeCanvas(mergeCanvasNames: string[], forceCompositeOperation?: string): Canvas<CanvasType> | undefined {
         if(!Array.isArray(mergeCanvasNames)) return;
 
         const mergeTargetCanvasNames: string[] = [];
@@ -150,7 +155,7 @@ export class Xylograph<T> {
             if(canvasNames.includes(mergeCanvasName)) mergeTargetCanvasNames.push(mergeCanvasName);
         }
 
-        const newCanvases: CanvasArray<T> = [];
+        const newCanvases: CanvasArray<CanvasType> = [];
         const newCanvasIndexes: CanvasIndexMap = Object.create(null);
 
         // Create the canvas array after merging
@@ -164,10 +169,10 @@ export class Xylograph<T> {
             }
         }
 
-        const baseCanvas = this.getCanvas(mergeTargetCanvasNames[0]) as Canvas<T>;
-        const mergeCanvases: CanvasArray<T> = [];
+        const baseCanvas = this.getCanvas(mergeTargetCanvasNames[0]) as Canvas<CanvasType>;
+        const mergeCanvases: CanvasArray<CanvasType> = [];
         for(let i = 1; i < mergeTargetCanvasNames.length; i++) {
-            mergeCanvases.push(this.getCanvas(mergeTargetCanvasNames[i]) as Canvas<T>);
+            mergeCanvases.push(this.getCanvas(mergeTargetCanvasNames[i]) as Canvas<CanvasType>);
         }
 
         this._mergeCanvases(baseCanvas, mergeCanvases, forceCompositeOperation);
@@ -178,11 +183,11 @@ export class Xylograph<T> {
         return baseCanvas;
     }
 
-    public getCanvases(): CanvasArray<T> {
+    public getCanvases(): CanvasArray<CanvasType> {
         return this.canvases;
     }
 
-    public setCanvases(canvases: CanvasArray<T>): void {
+    public setCanvases(canvases: CanvasArray<CanvasType>): void {
         if(!Array.isArray(canvases)) return;
         this._replaceCanvases(canvases);
         return;
@@ -203,7 +208,7 @@ export class Xylograph<T> {
 
         for(let i = 0; i < this.canvases.length; i++) {
             const originCanvas = this.canvases[i];
-            const newCanvas = this._createCanvas(width, height) as Canvas<T>;
+            const newCanvas = this._createCanvas(width, height) as Canvas<CanvasType>;
             const newCtx = newCanvas.getContext("2d");
             newCtx.drawImage(this._createImage(originCanvas), sx, sy, sw || originCanvas.width, sh || originCanvas.height, 0, 0, width, height);
             this._setCloneOfCanvasProperty(newCanvas, originCanvas);
@@ -215,13 +220,13 @@ export class Xylograph<T> {
     }
 
     public toDataURL(): string {
-        const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<T>;
+        const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<CanvasType>;
         this._setDefaultCanvasProperty(baseCanvas, "");
         this._mergeCanvases(baseCanvas, this.canvases);
         return baseCanvas.toDataURL();
     }
 
-    private _insertCanvas(canvas: Canvas<T>, canvasName: string, afterOf?: number | string | undefined): void {
+    private _insertCanvas(canvas: Canvas<CanvasType>, canvasName: string, afterOf?: number | string | undefined): void {
         if(!canvas || typeof canvasName !== "string") return; 
 
         if(typeof afterOf === "number") {
@@ -260,11 +265,11 @@ export class Xylograph<T> {
         }
     }
 
-    private _getCanvasNameFromProperty(canvas: Canvas<T>): string {
+    private _getCanvasNameFromProperty(canvas: Canvas<CanvasType>): string {
         return canvas.xylograph.name;
     }
 
-    private _setCanvasNameToProperty(canvas: Canvas<T>, canvasName: string): void {
+    private _setCanvasNameToProperty(canvas: Canvas<CanvasType>, canvasName: string): void {
         canvas.xylograph.name = canvasName;
     }
 
@@ -280,7 +285,7 @@ export class Xylograph<T> {
         return canvasName.replace(/\[[0-9]+\]$/, "[" + (num + 1) + "]");
     }
 
-    private _setDefaultCanvasProperty(canvas: Canvas<T>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
+    private _setDefaultCanvasProperty(canvas: Canvas<CanvasType>, canvasName: string, compositeOperation = "source-over", hidden = false): void {
         canvas.xylograph = {
             name: canvasName,
             compositeOperation: compositeOperation,
@@ -288,7 +293,7 @@ export class Xylograph<T> {
         }
     }
 
-    private _setCloneOfCanvasProperty(destCanvas: Canvas<T>, originCanvas: Canvas<T>): void {
+    private _setCloneOfCanvasProperty(destCanvas: Canvas<CanvasType>, originCanvas: Canvas<CanvasType>): void {
         const originProperty = originCanvas.xylograph;
         destCanvas.xylograph = {
             name: originProperty.name,
@@ -297,11 +302,11 @@ export class Xylograph<T> {
         };
     }
 
-    private _copyCanvas(originCanvas: Canvas<T>): Canvas<T> {
+    private _copyCanvas(originCanvas: Canvas<CanvasType>): Canvas<CanvasType> {
         const width = (typeof originCanvas.width === "number")? originCanvas.width : this.canvasWidth;
         const height = (typeof originCanvas.height === "number")? originCanvas.height : this.canvasHeight;
 
-        const newCanvas = this._createCanvas(width, height) as Canvas<T>;
+        const newCanvas = this._createCanvas(width, height) as Canvas<CanvasType>;
         const newCtx = newCanvas.getContext("2d");
         const originCtx = originCanvas.getContext("2d");
         newCtx.putImageData(originCtx.getImageData(0, 0, width, height), 0, 0);
@@ -309,8 +314,8 @@ export class Xylograph<T> {
         return newCanvas 
     }
 
-    private _replaceCanvases(canvases: CanvasArray<T>): CanvasArray<T> {
-        const newCanvases: CanvasArray<T> = [];
+    private _replaceCanvases(canvases: CanvasArray<CanvasType>): CanvasArray<CanvasType> {
+        const newCanvases: CanvasArray<CanvasType> = [];
         const newCanvasIndexes: CanvasIndexMap = Object.create(null);
         for(let i = 0; i < canvases.length; i++) {
             const canvas = canvases[i];
@@ -326,7 +331,7 @@ export class Xylograph<T> {
         return newCanvases;
     }
 
-    private _mergeCanvases(baseCanvas: Canvas<T>, mergeCanvases: CanvasArray<T>, forceCompositeOperation?: string): Canvas<T> {
+    private _mergeCanvases(baseCanvas: Canvas<CanvasType>, mergeCanvases: CanvasArray<CanvasType>, forceCompositeOperation?: string): Canvas<CanvasType> {
         const baseCtx = baseCanvas.getContext("2d");
         for(let i = 0; i < mergeCanvases.length; i++) {
             const canvas = mergeCanvases[i];

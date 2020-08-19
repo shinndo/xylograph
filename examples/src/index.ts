@@ -4,6 +4,12 @@ import * as root from 'app-root-path';
 import * as NodeCanvas from "canvas";
 import {Xylograph, Canvas} from '../../src/index';
 
+interface XylographFunctionTypes {
+    createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
+    createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+}
+
 async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
     return new Promise((resolve, rejects) => {
         fs.readFile(filepath, (err, data) => {
@@ -22,12 +28,15 @@ async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
     const frameWidth = 40;
 
     // Create Xylograph
-    const xg = new Xylograph<NodeCanvas.Canvas>({
-        createCanvasFunction: NodeCanvas.createCanvas,
-        createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+    const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
+        createCanvas: NodeCanvas.createCanvas,
+        createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
             const img = new NodeCanvas.Image();
             img.src = canvas.toBuffer("image/png");
             return img;
+        },
+        createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            return canvas.toBuffer();
         },
         canvasWidth: width,
         canvasHeight: height
