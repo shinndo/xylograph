@@ -18,15 +18,26 @@ import {Xylograph, Canvas} from "xylograph";
 const width = 800;
 const height = 600;
 
+// Declare function type
+interface XylographFunctionTypes {
+    createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
+    createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+}
+
 // Create Xylograph
-const xg = new Xylograph<NodeCanvas.Canvas>({
+const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
   // Create canvas function
-  createCanvasFunction: (w: number, h: number) => NodeCanvas.createCanvas(w, h),
-  // Create image function
-  createImageFunction: (canvas: Canvas<NodeCanvas.Canvas>) => {
+  createCanvas: (w: number, h: number) => NodeCanvas.createCanvas(w, h),
+  // Create image from canvas
+  createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
     const img = new NodeCanvas.Image();
     img.src = canvas.toBuffer("image/png");
     return img;
+  },
+  // Create binary from canvas
+  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+    return canvas.toBuffer();
   },
   canvasWidth: width,
   canvasHeight: height
