@@ -12,6 +12,7 @@ The npm module is in preparation.
 
 If use [node-canvas](https://github.com/Automattic/node-canvas) library:
 ```ts
+import * as fs from 'fs';
 import * as NodeCanvas from "canvas";
 import {Xylograph, Canvas} from "xylograph";
 
@@ -60,6 +61,8 @@ textCtx.fillText("Xylograph", width / 2, height / 2);
 
 // Get DataURL of merged canvases
 console.log(xg.toDataURL()); // => data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAA...
+
+fs.writeFileSync("./output.png", xg.toBinary("image/png"));
 ```
 
 ## Documentation
@@ -190,6 +193,40 @@ Get data URL merging all canvases in xylograph.
 
 ```ts
 xylograph.toDataURL() => string
+```
+
+### Xylogrpah.toBinary()
+
+Get binary data merging all canvases in xylograph.
+
+```ts
+xylograph.toBinary(...args: any[]) => any
+```
+
+The argument and return type are of the type specified by the type system.
+
+e.g.
+```ts
+interface toBinaryOption {
+  quality: number;
+}
+interface XylographFunctionTypes {
+    // ...
+    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: string, option?: toBinaryOption) => Buffer;
+}
+
+const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
+  // ...
+  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, option?: toBinaryOption) => {
+    if(mimeType == "image/jpeg") return canvas.toBuffer(mimeType, option);
+    return canvas.toBuffer();
+  },
+  // ...
+});
+
+// The added arguments are passed to the second and subsequent arguments of the createBinaryFromCanvas function.
+xylograph.toBinary("image/jpeg", { quality: 0.5 }) // => Buffer
+
 ```
 
 ### Canvas.xylograph
