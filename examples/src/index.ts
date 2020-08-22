@@ -4,10 +4,12 @@ import * as root from 'app-root-path';
 import * as NodeCanvas from "canvas";
 import {Xylograph, Canvas} from '../../src/index';
 
+type binaryMimeType = "application/pdf" | "image/jpeg" | "image/png" | "raw";
+
 interface XylographFunctionTypes {
     createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
     createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => Buffer;
 }
 
 async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
@@ -35,14 +37,25 @@ async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
             img.src = canvas.toBuffer("image/png");
             return img;
         },
-        createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
-            return canvas.toBuffer();
+        createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => {
+            switch(mimeType) {
+                case "application/pdf":
+                    return canvas.toBuffer(mimeType);
+                case "image/jpeg":
+                    return canvas.toBuffer(mimeType);
+                case "image/png":
+                    return canvas.toBuffer(mimeType);
+                case "raw":
+                    return canvas.toBuffer(mimeType);
+                default:
+                    return canvas.toBuffer();
+            }
         },
         canvasWidth: width,
         canvasHeight: height
     });
 
-    const base = xg.addCanvas("background"); // base canvas
+    const base = xg.addCanvas("background");
     const main = xg.addCanvas("main");
     const frame = xg.addCanvas("frame");
     const author = xg.addCanvas("author");
@@ -69,9 +82,7 @@ async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
     authorCtx.font = "bold " + Math.floor(frameWidth/2) + "px sans-serif;"
     authorCtx.fillText(authorName, width - frameWidth, height - frameWidth / 2);
 
-    xg.mergeCanvas(xg.getCanvasNames()); // Merge to base canvas
-
     const outputPath = root + path.sep + "examples" + path.sep + "output.png";
-    fs.writeFileSync(outputPath, base.toBuffer("image/png"));
+    fs.writeFileSync(outputPath, xg.toBinary("image/png"));
     console.log("Output completed: " + outputPath);
 })();

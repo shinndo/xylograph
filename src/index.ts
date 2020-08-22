@@ -21,7 +21,7 @@ type CanvasIndexMap = {[canvasName: string]: number};
 interface DefaultXylographFunctionTypes {
     createCanvas: (w: number, h: number) => any;
     createImageFromCanvas: (canvas: any) => any;
-    createBinaryFromCanvas: (canvas: any) => any;
+    createBinaryFromCanvas: (canvas: any, ...options: any) => any;
 }
 
 // Xylograph option
@@ -37,6 +37,7 @@ export type xylographOption<FunctionType extends DefaultXylographFunctionTypes =
 export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunctionTypes = DefaultXylographFunctionTypes> {
     private _createCanvas: FunctionType['createCanvas'];
     private _createImage: FunctionType['createImageFromCanvas'];
+    private _createBinary: FunctionType['createBinaryFromCanvas'];
     private canvasWidth: number;
     private canvasHeight: number;
     private canvases: CanvasArray<CanvasType>;
@@ -56,9 +57,15 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
 
         // Set createImage function
         if(!opt.createImageFromCanvas) {
-            throw new Error("createCanvas function is undefined.");
+            throw new Error("createImageFromCanvas function is undefined.");
         }
         this._createImage = opt.createImageFromCanvas;
+
+        // Set createBinary function
+        if(!opt.createBinaryFromCanvas) {
+            throw new Error("createBinaryFromCanvas function is undefined.");
+        }
+        this._createBinary = opt.createBinaryFromCanvas;
 
         // Init canvas array
         this.canvases = [];
@@ -224,6 +231,14 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
         this._setDefaultCanvasProperty(baseCanvas, "");
         this._mergeCanvases(baseCanvas, this.canvases);
         return baseCanvas.toDataURL();
+    }
+
+    public toBinary(...args: any[]): ReturnType<FunctionType['createBinaryFromCanvas']> {
+        const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<CanvasType>;
+        this._setDefaultCanvasProperty(baseCanvas, "");
+        this._mergeCanvases(baseCanvas, this.canvases);
+        args.unshift(baseCanvas);
+        return this._createBinary.apply(this, args as [any, any[]]);
     }
 
     private _insertCanvas(canvas: Canvas<CanvasType>, canvasName: string, afterOf?: number | string | undefined): void {

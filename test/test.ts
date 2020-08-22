@@ -1,3 +1,4 @@
+import * as os from "os";
 import { Xylograph, Canvas, CanvasArray } from "../src/index";
 import * as NodeCanvas from "canvas";
 
@@ -36,7 +37,7 @@ describe("Xylograph", () => {
         createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
         createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
         createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
-}   
+    }
 
     test("constructor", () => {
         expect.assertions(1);
@@ -835,6 +836,85 @@ describe("Xylograph", () => {
         expect(xg1.toDataURL()).toEqual(expectCanvas.toDataURL());
     });
 
-    test.todo("createOutputStream()");
-    test.todo("toBinary()");
+    test("toBinary()", () => {
+        type binaryMimeType = "application/pdf" | "image/jpeg" | "image/png" | "raw";
+
+        interface toBinaryOption {
+            value: string;
+        }
+        interface CanvasFunctionType {
+            createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
+            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType: binaryMimeType, options?: toBinaryOption) => Buffer;
+        }
+
+        const toBinaryMimeType = "raw";
+        const toBinaryOptionValue = "toBin";
+        const canvasName = "toBinary";
+
+        const xg1 = new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
+            createCanvas: NodeCanvas.createCanvas,
+            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                const img = new NodeCanvas.Image();
+                img.src = canvas.toBuffer("image/png");
+                return img;
+            },
+            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, options?: toBinaryOption) => {
+                expect(mimeType).toBe(toBinaryMimeType);
+                expect(options).toEqual(expect.anything());
+                if(typeof options !== "undefined") expect((options as toBinaryOption).value).toBe(toBinaryOptionValue);
+
+                switch(mimeType) {
+                    case "application/pdf":
+                        return canvas.toBuffer(mimeType);
+                    case "image/jpeg":
+                        return canvas.toBuffer(mimeType);
+                    case "image/png":
+                        return canvas.toBuffer(mimeType);
+                    case "raw":
+                        return canvas.toBuffer(mimeType);
+                    default:
+                        return canvas.toBuffer();
+                }
+            },
+            canvasWidth: 5,
+            canvasHeight: 5
+        });
+
+        const ctx1 =  xg1.addCanvas(canvasName).getContext("2d");
+        ctx1.fillStyle = "#ff0000";
+        ctx1.fillRect(0, 0, 3, 3);
+
+        const ctx2 =  xg1.addCanvas(canvasName + "[1]").getContext("2d");
+        ctx2.fillStyle = "#00ff00";
+        ctx2.fillRect(0, 3, 5, 2);
+
+        let expectArray: number[] | undefined = undefined;
+
+        if(os.endianness() === "LE") {
+            // if Little-Endian system, the array will be ordered BGRA.
+            expectArray = [
+            //  X:               0,                  1,                  2,                  3,                  4
+            //    B,   G,   R,   A,   B,   G,   R,   A,   B,   G,   R,   A,   B,   G,   R,   A,   B,   G,   R,   A
+                  0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 0
+                  0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 1
+                  0,   0, 255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 2
+                  0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255, // Y: 3
+                  0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255  // Y: 4
+            ];
+        } else if(os.endianness() === "BE") {
+            // if Big-Endian system, the array will be ordered ARGB.
+            expectArray = [
+            //  X:               0,                  1,                  2,                  3,                  4
+            //    A,   R,   G,   B,   A,   R,   G,   B,   A,   R,   G,   B,   A,   R,   G,   B,   A,   R,   G,   B
+                255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 0
+                255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 1
+                255, 255,   0,   0, 255, 255,   0,   0, 255, 255,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0, // Y: 2
+                255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, // Y: 3
+                255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0, 255,   0  // Y: 4
+            ];
+        }
+        
+        expect(Array.from(xg1.toBinary(toBinaryMimeType, {value: toBinaryOptionValue}))).toEqual(expectArray);
+    });   
 });
