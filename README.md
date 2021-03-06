@@ -59,9 +59,10 @@ textCtx.textBaseline = "middle";
 textCtx.font = "bold 80px sans-serif;"
 textCtx.fillText("Xylograph", width / 2, height / 2);
 
-// Get DataURL of merged canvases
+// Output DataURL of merged canvas.
 console.log(xg.toDataURL()); // => data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAA...
 
+// Output image binary of merged canvas, and write to filesystem.
 fs.writeFileSync("./output.png", xg.toBinary("image/png"));
 ```
 
