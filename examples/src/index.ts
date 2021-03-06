@@ -8,8 +8,8 @@ type binaryMimeType = "application/pdf" | "image/jpeg" | "image/png" | "raw";
 
 interface XylographFunctionTypes {
     createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
-    createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => Buffer;
+    canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+    canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => Buffer;
 }
 
 async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
@@ -32,12 +32,12 @@ async function loadLocalImage(filepath: string): Promise<NodeCanvas.Image> {
     // Create Xylograph
     const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
         createCanvas: NodeCanvas.createCanvas,
-        createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+        canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
             const img = new NodeCanvas.Image();
             img.src = canvas.toBuffer("image/png");
             return img;
         },
-        createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => {
+        canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType) => {
             switch(mimeType) {
                 case "application/pdf":
                     return canvas.toBuffer(mimeType);

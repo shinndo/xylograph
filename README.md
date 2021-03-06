@@ -22,8 +22,8 @@ const height = 600;
 // Declare function type
 interface XylographFunctionTypes {
     createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
-    createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+    canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+    canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
 }
 
 // Create Xylograph
@@ -31,13 +31,13 @@ const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
   // Create canvas function
   createCanvas: (w: number, h: number) => NodeCanvas.createCanvas(w, h),
   // Create image from canvas
-  createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+  canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
     const img = new NodeCanvas.Image();
     img.src = canvas.toBuffer("image/png");
     return img;
   },
   // Create binary from canvas
-  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+  canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
     return canvas.toBuffer();
   },
   canvasWidth: width,
@@ -59,13 +59,45 @@ textCtx.textBaseline = "middle";
 textCtx.font = "bold 80px sans-serif;"
 textCtx.fillText("Xylograph", width / 2, height / 2);
 
-// Get DataURL of merged canvases
+// Output DataURL of merged canvas.
 console.log(xg.toDataURL()); // => data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAJYCAYAAA...
 
+// Output image binary of merged canvas, and write to filesystem.
 fs.writeFileSync("./output.png", xg.toBinary("image/png"));
 ```
 
 ## Documentation
+
+### Constructor
+
+Xylograph constructor.
+
+```ts
+new Xylograph<CanvasType, XylographFunctionTypes>(xylographOption)
+```
+
+#### Type
+
+* `CanvasType`: Canvas type from Canvas API compatible library.
+* `XylographFunctionTypes`: Defining the type of function that connects Canvas and Xylograph.
+
+#### Arguments
+
+* `xylographOption`: Xylograph option object.
+
+#### XylographFunctionTypes
+
+* `createCanvas`: Type definition of function to create a blank Canvas object.
+* `canvasToImage`: Type definition of function to convert Image object from canvas.
+* `canvasToBinary`: Type definition of function to convert binary from canvas.
+
+#### xylographOption
+
+* `createCanvas`: Function of create a blank Canvas object. Apply `XylographFunctionTypes.createCanvas` type.
+* `canvasToImage`: Function of convert Image object from canvas. Apply `XylographFunctionTypes.canvasToImage` type.
+* `canvasToBinary`: function of convert binary from canvas. Apply `XylographFunctionTypes.canvasToBinary` type.
+* `canvasWidth`: Canvas width. Unit is `px`.
+* `canvasHeight`: Canvas height. Unit is `px`.
 
 ### Xylograph.addCanvas(canvasName)
 
@@ -212,19 +244,19 @@ interface toBinaryOption {
 }
 interface XylographFunctionTypes {
     // ...
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: string, option?: toBinaryOption) => Buffer;
+    canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: string, option?: toBinaryOption) => Buffer;
 }
 
 const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
   // ...
-  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, option?: toBinaryOption) => {
+  canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, option?: toBinaryOption) => {
     if(mimeType == "image/jpeg") return canvas.toBuffer(mimeType, option);
     return canvas.toBuffer();
   },
   // ...
 });
 
-// The added arguments are passed to the second and subsequent arguments of the createBinaryFromCanvas function.
+// The added arguments are passed to the second and subsequent arguments of the canvasToBinary function.
 xylograph.toBinary("image/jpeg", { quality: 0.5 }) // => Buffer
 
 ```
