@@ -22,8 +22,8 @@ const height = 600;
 // Declare function type
 interface XylographFunctionTypes {
     createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
-    createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+    canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+    canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
 }
 
 // Create Xylograph
@@ -31,13 +31,13 @@ const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
   // Create canvas function
   createCanvas: (w: number, h: number) => NodeCanvas.createCanvas(w, h),
   // Create image from canvas
-  createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+  canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
     const img = new NodeCanvas.Image();
     img.src = canvas.toBuffer("image/png");
     return img;
   },
   // Create binary from canvas
-  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+  canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
     return canvas.toBuffer();
   },
   canvasWidth: width,
@@ -212,19 +212,19 @@ interface toBinaryOption {
 }
 interface XylographFunctionTypes {
     // ...
-    createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: string, option?: toBinaryOption) => Buffer;
+    canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: string, option?: toBinaryOption) => Buffer;
 }
 
 const xg = new Xylograph<NodeCanvas.Canvas, XylographFunctionTypes>({
   // ...
-  createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, option?: toBinaryOption) => {
+  canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, option?: toBinaryOption) => {
     if(mimeType == "image/jpeg") return canvas.toBuffer(mimeType, option);
     return canvas.toBuffer();
   },
   // ...
 });
 
-// The added arguments are passed to the second and subsequent arguments of the createBinaryFromCanvas function.
+// The added arguments are passed to the second and subsequent arguments of the canvasToBinary function.
 xylograph.toBinary("image/jpeg", { quality: 0.5 }) // => Buffer
 
 ```
