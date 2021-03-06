@@ -16,11 +16,11 @@ const createCanvasFunctionMock = (tag?: string) => {
     }
 };
 
-const createImageFunctionMock = (canvas: MockCanvas): MockImage => {
+const canvasToImageFunctionMock = (canvas: MockCanvas): MockImage => {
     return {};
 };
 
-const createBinaryFromCanvas = (canvas: MockCanvas): MockBuffer => {
+const canvasToBinaryFunctionMock = (canvas: MockCanvas): MockBuffer => {
     return {};
 };
 
@@ -29,14 +29,14 @@ describe("Xylograph", () => {
     // Mock function type
     interface MockFunctionTypes {
         createCanvas: (w: number, h: number) => MockCanvas;
-        createImageFromCanvas: (canvas: MockCanvas) => MockImage;
-        createBinaryFromCanvas: (canvas: MockCanvas) => MockBuffer;
+        canvasToImage: (canvas: MockCanvas) => MockImage;
+        canvasToBinary: (canvas: MockCanvas) => MockBuffer;
     }
 
     interface CanvasFunctionType {
         createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
-        createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-        createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
+        canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+        canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => Buffer;
     }
 
     test("constructor", () => {
@@ -44,8 +44,8 @@ describe("Xylograph", () => {
         const notThrowInstantiate = () => {
             new Xylograph<MockCanvas, MockFunctionTypes>({
                 createCanvas: createCanvasFunctionMock(),
-                createImageFromCanvas: createImageFunctionMock,
-                createBinaryFromCanvas: createBinaryFromCanvas
+                canvasToImage: canvasToImageFunctionMock,
+                canvasToBinary: canvasToBinaryFunctionMock
             });
         }
         expect(notThrowInstantiate).not.toThrow();
@@ -55,8 +55,8 @@ describe("Xylograph", () => {
         expect.assertions(10);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
         const name = "addNamedCanvasTest";
         const afterName = "afterTest";
@@ -216,8 +216,8 @@ describe("Xylograph", () => {
         expect.assertions(3);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
         const name = "getNamedCanvasTest";
 
@@ -237,8 +237,8 @@ describe("Xylograph", () => {
         expect.assertions(4);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
         const name = "removeCanvasTest";
 
@@ -260,8 +260,8 @@ describe("Xylograph", () => {
         expect.assertions(13);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
 
         // Simple rename
@@ -305,8 +305,8 @@ describe("Xylograph", () => {
         expect.assertions(7);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
 
         const topName = "top";
@@ -344,12 +344,12 @@ describe("Xylograph", () => {
         const canvasHeight = 10;
         const xg1 = new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
             createCanvas: NodeCanvas.createCanvas,
-            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
                 img.src = canvas.toBuffer("image/png");
                 return img;
             },
-            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 return canvas.toBuffer();
             },
             canvasWidth: canvasWidth,
@@ -407,12 +407,12 @@ describe("Xylograph", () => {
     test("mergeCanvas(canvasNames[], forceCompositeOperation?)", () => {
         const xg = new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
             createCanvas: NodeCanvas.createCanvas,
-            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
                 img.src = canvas.toBuffer("image/png");
                 return img;
             },
-            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 return canvas.toBuffer();
             },
             canvasWidth: 5,
@@ -525,8 +525,8 @@ describe("Xylograph", () => {
         expect.assertions(7);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
 
         const firstName = "1st";
@@ -556,8 +556,8 @@ describe("Xylograph", () => {
         expect.assertions(9);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
 
         const oldCanvasName = "old";
@@ -610,8 +610,8 @@ describe("Xylograph", () => {
         expect.assertions(8);
         const xg = new Xylograph<MockCanvas, MockFunctionTypes>({
             createCanvas: createCanvasFunctionMock(),
-            createImageFromCanvas: createImageFunctionMock,
-            createBinaryFromCanvas: createBinaryFromCanvas
+            canvasToImage: canvasToImageFunctionMock,
+            canvasToBinary: canvasToBinaryFunctionMock
         });
         
         const firstName = "1st";
@@ -639,12 +639,12 @@ describe("Xylograph", () => {
         function createXylograph() {
             return new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
                 createCanvas: NodeCanvas.createCanvas,
-                createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
                     const img = new NodeCanvas.Image();
                     img.src = canvas.toBuffer("image/png");
                     return img;
                 },
-                createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
                     return canvas.toBuffer();
                 },
                 canvasWidth: 10,
@@ -793,12 +793,12 @@ describe("Xylograph", () => {
         function createXylograph() {
             return new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
                 createCanvas: NodeCanvas.createCanvas,
-                createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
                     const img = new NodeCanvas.Image();
                     img.src = canvas.toBuffer("image/png");
                     return img;
                 },
-                createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+                canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>) => {
                     return canvas.toBuffer();
                 },
                 canvasWidth: 10,
@@ -844,8 +844,8 @@ describe("Xylograph", () => {
         }
         interface CanvasFunctionType {
             createCanvas: (w: number, h: number) => NodeCanvas.Canvas;
-            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
-            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType: binaryMimeType, options?: toBinaryOption) => Buffer;
+            canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => NodeCanvas.Image;
+            canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType: binaryMimeType, options?: toBinaryOption) => Buffer;
         }
 
         const toBinaryMimeType = "raw";
@@ -854,12 +854,12 @@ describe("Xylograph", () => {
 
         const xg1 = new Xylograph<NodeCanvas.Canvas, CanvasFunctionType>({
             createCanvas: NodeCanvas.createCanvas,
-            createImageFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>) => {
+            canvasToImage: (canvas: Canvas<NodeCanvas.Canvas>) => {
                 const img = new NodeCanvas.Image();
                 img.src = canvas.toBuffer("image/png");
                 return img;
             },
-            createBinaryFromCanvas: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, options?: toBinaryOption) => {
+            canvasToBinary: (canvas: Canvas<NodeCanvas.Canvas>, mimeType?: binaryMimeType, options?: toBinaryOption) => {
                 expect(mimeType).toBe(toBinaryMimeType);
                 expect(options).toEqual(expect.anything());
                 if(typeof options !== "undefined") expect((options as toBinaryOption).value).toBe(toBinaryOptionValue);

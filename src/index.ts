@@ -20,15 +20,15 @@ type CanvasIndexMap = {[canvasName: string]: number};
 // Xylograph function type
 interface DefaultXylographFunctionTypes {
     createCanvas: (w: number, h: number) => any;
-    createImageFromCanvas: (canvas: any) => any;
-    createBinaryFromCanvas: (canvas: any, ...options: any) => any;
+    canvasToImage: (canvas: any) => any;
+    canvasToBinary: (canvas: any, ...options: any) => any;
 }
 
 // Xylograph option
 export type xylographOption<FunctionType extends DefaultXylographFunctionTypes = DefaultXylographFunctionTypes> = {
     createCanvas: FunctionType['createCanvas'];
-    createImageFromCanvas: FunctionType['createImageFromCanvas'];
-    createBinaryFromCanvas: FunctionType['createBinaryFromCanvas'];
+    canvasToImage: FunctionType['canvasToImage'];
+    canvasToBinary: FunctionType['canvasToBinary'];
     canvasWidth?: number;
     canvasHeight?: number;
 };
@@ -36,8 +36,8 @@ export type xylographOption<FunctionType extends DefaultXylographFunctionTypes =
 // Xylograph Class
 export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunctionTypes = DefaultXylographFunctionTypes> {
     private _createCanvas: FunctionType['createCanvas'];
-    private _createImage: FunctionType['createImageFromCanvas'];
-    private _createBinary: FunctionType['createBinaryFromCanvas'];
+    private _canvasToImage: FunctionType['canvasToImage'];
+    private _canvasToBinary: FunctionType['canvasToBinary'];
     private canvasWidth: number;
     private canvasHeight: number;
     private canvases: CanvasArray<CanvasType>;
@@ -56,16 +56,16 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
         this._createCanvas = opt.createCanvas;
 
         // Set createImage function
-        if(!opt.createImageFromCanvas) {
-            throw new Error("createImageFromCanvas function is undefined.");
+        if(!opt.canvasToImage) {
+            throw new Error("canvasToImage function is undefined.");
         }
-        this._createImage = opt.createImageFromCanvas;
+        this._canvasToImage = opt.canvasToImage;
 
         // Set createBinary function
-        if(!opt.createBinaryFromCanvas) {
-            throw new Error("createBinaryFromCanvas function is undefined.");
+        if(!opt.canvasToBinary) {
+            throw new Error("canvasToBinary function is undefined.");
         }
-        this._createBinary = opt.createBinaryFromCanvas;
+        this._canvasToBinary = opt.canvasToBinary;
 
         // Init canvas array
         this.canvases = [];
@@ -217,7 +217,7 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
             const originCanvas = this.canvases[i];
             const newCanvas = this._createCanvas(width, height) as Canvas<CanvasType>;
             const newCtx = newCanvas.getContext("2d");
-            newCtx.drawImage(this._createImage(originCanvas), sx, sy, sw || originCanvas.width, sh || originCanvas.height, 0, 0, width, height);
+            newCtx.drawImage(this._canvasToImage(originCanvas), sx, sy, sw || originCanvas.width, sh || originCanvas.height, 0, 0, width, height);
             this._setCloneOfCanvasProperty(newCanvas, originCanvas);
             this.canvases[i] = newCanvas;
         }
@@ -233,12 +233,12 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
         return baseCanvas.toDataURL();
     }
 
-    public toBinary(...args: any[]): ReturnType<FunctionType['createBinaryFromCanvas']> {
+    public toBinary(...args: any[]): ReturnType<FunctionType['canvasToBinary']> {
         const baseCanvas = this._createCanvas(this.canvasWidth, this.canvasHeight) as Canvas<CanvasType>;
         this._setDefaultCanvasProperty(baseCanvas, "");
         this._mergeCanvases(baseCanvas, this.canvases);
         args.unshift(baseCanvas);
-        return this._createBinary.apply(this, args as [any, any[]]);
+        return this._canvasToBinary.apply(this, args as [any, any[]]);
     }
 
     private _insertCanvas(canvas: Canvas<CanvasType>, canvasName: string, afterOf?: number | string | undefined): void {
@@ -352,7 +352,7 @@ export class Xylograph<CanvasType, FunctionType extends DefaultXylographFunction
             const canvas = mergeCanvases[i];
             if(canvas.xylograph.hidden) continue;
             baseCtx.globalCompositeOperation = (forceCompositeOperation)? forceCompositeOperation : canvas.xylograph.compositeOperation;
-            baseCtx.drawImage(this._createImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
+            baseCtx.drawImage(this._canvasToImage(canvas), 0, 0, canvas.width, canvas.height, 0, 0, baseCanvas.width, baseCanvas.height);
         }
 
         baseCtx.globalCompositeOperation = baseCanvas.xylograph.compositeOperation;
