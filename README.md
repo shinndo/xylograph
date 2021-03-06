@@ -67,6 +67,37 @@ fs.writeFileSync("./output.png", xg.toBinary("image/png"));
 
 ## Documentation
 
+### Constructor
+
+Xylograph constructor.
+
+```ts
+new Xylograph<CanvasType, XylographFunctionTypes>(xylographOption)
+```
+
+#### Type
+
+* `CanvasType`: Canvas type from Canvas API compatible library.
+* `XylographFunctionTypes`: Defining the type of function that connects Canvas and Xylograph.
+
+#### Arguments
+
+* `xylographOption`: Xylograph option object.
+
+#### XylographFunctionTypes
+
+* `createCanvas`: Type definition of function to create a blank Canvas object.
+* `canvasToImage`: Type definition of function to convert Image object from canvas.
+* `canvasToBinary`: Type definition of function to convert binary from canvas.
+
+#### xylographOption
+
+* `createCanvas`: Function of create a blank Canvas object. Apply `XylographFunctionTypes.createCanvas` type.
+* `canvasToImage`: Function of convert Image object from canvas. Apply `XylographFunctionTypes.canvasToImage` type.
+* `canvasToBinary`: function of convert binary from canvas. Apply `XylographFunctionTypes.canvasToBinary` type.
+* `canvasWidth`: Canvas width. Unit is `px`.
+* `canvasHeight`: Canvas height. Unit is `px`.
+
 ### Xylograph.addCanvas(canvasName)
 
 Create a canvas and add it to Xylograph object. Return of created canvas object.
